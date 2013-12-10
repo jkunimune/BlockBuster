@@ -41,19 +41,20 @@
 #include <MeggyJrSimple.h>
 
 struct point {int x; int y;};
-point ball = {3, 2};
+point ball = {4, 2};
 point paddle = {3, 0};
-int slope = 1;
-int yvelocity = 1;
-int level = 1;
-boolean moved = false;
-int timer = 0;
+int slope;
+int yvelocity;
+int level;
+boolean moved;
+int timer;
 
 
 void setup() 
 {
   MeggyJrSimpleSetup(); 
   Serial.begin(9600);
+  level = 1;
   reset();
 }
 
@@ -81,7 +82,7 @@ void loop()
   
   MovePress();
   
-  if(timer % 30 == 0)
+  if(timer % 10 == 0)
     MoveHold();
   
   for(int j = -1; j < 2; j++)
@@ -91,6 +92,9 @@ void loop()
   
   delay(10);
   
+  if (CheckVictory())
+    RunVictory();
+  
   timer++;
 }
 
@@ -98,7 +102,7 @@ void loop()
 void reset()
 {
   ClearSlate();
-  ball.x = 3;
+  ball.x = 4;
   ball.y = 2;
   paddle.x = 3;
   paddle.y = 0;
@@ -111,6 +115,19 @@ void reset()
     case 1:
       level1();
       Serial.println("Initiating level 1");
+      break;
+    case 2:
+      level2();
+      Serial.println("Initiating level 2");
+      break;
+    case 3:
+      level3();
+      Serial.println("Initiating level 3");
+      break;
+    case 4:
+      level4();
+      Serial.println("Initiating level 4");
+      break;
   }
 }
 
@@ -174,6 +191,13 @@ void PaddleCollision()
 {
   switch (paddle.x - ball.x)
   {
+    case -2:
+      if (slope < 1)
+      {
+        yvelocity = 1;
+        slope++;
+      }
+      break;
     case -1:
       yvelocity = 1;
       slope++;
@@ -184,7 +208,41 @@ void PaddleCollision()
     case 1:
       yvelocity = 1;
       slope--;
+      break;
+    case 2:
+      if (slope > 1)
+      {
+        yvelocity = 1;
+        slope--;
+      }
   }
+}
+
+
+boolean CheckVictory()
+{
+  for (int p = 0; p < 8; p++)
+    for (int o = 0; o < 8; o++)
+      if (ReadPx(o, p) == Red || ReadPx(o, p) == Green)
+        return false;
+  return true;
+}
+
+
+void RunVictory()
+{
+  for(int i=0;i<8;i++)
+    for(int j=0;j<8;j++)
+      DrawPx(i,j,Green);
+  DisplaySlate();
+  Tone_Start(ToneC5,150);
+  delay(150);
+  Tone_Start(ToneE5,150);
+  delay(150);
+  Tone_Start(ToneC6,150);
+  delay(150);
+  level++;
+  reset();
 }
 
 
@@ -209,6 +267,43 @@ void GameOver()
 void level1()
 {
   for (int i = 2; i < 6; i++)
-    for (int k = 4; k < 8; k++)
+    for (int k = 5; k < 8; k++)
+       DrawPx(i, k, Red);
+}
+
+
+void level2()
+{
+  for (int i = 2; i < 6; i++)
+    for (int k = 5; k < 8; k++)
+       DrawPx(i, k, Red);
+  for (int i = 2; i < 6; i++)
+    DrawPx(i, 4, Orange);
+}
+
+
+void level3()
+{
+  for (int i = 2; i < 6; i++)
+    for (int k = 5; k < 8; k++)
+       DrawPx(i, k, Red);
+  for (int i = 1; i < 7; i+=5)
+    for (int k = 5; k < 8; k++)
+       DrawPx(i, k, Orange);
+  for (int i = 1; i < 7; i++)
+    DrawPx(i, 4, Yellow);
+}
+
+
+void level4()
+{
+  for (int i = 2; i < 6; i++)
+    for (int k = 6; k < 8; k++)
+       DrawPx(i, k, Yellow);
+  for (int i = 0; i < 3; i++)
+    for (int k = 3; k < 5; k++)
+       DrawPx(i, k, Red);
+  for (int i = 5; i < 8; i++)
+    for (int k = 3; k < 5; k++)
        DrawPx(i, k, Red);
 }
