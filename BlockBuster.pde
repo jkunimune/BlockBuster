@@ -45,13 +45,15 @@ point ball = {3, 2};
 point paddle = {3, 0};
 int slope = 1;
 int yvelocity = 1;
-int level = 0;
+int level = 1;
+boolean moved = false;
 int timer = 0;
 
 
 void setup() 
 {
   MeggyJrSimpleSetup(); 
+  Serial.begin(9600);
   reset();
 }
 
@@ -59,6 +61,8 @@ void setup()
 void loop() 
 {
   DrawPx(ball.x, ball.y, Dark);
+  for(int j = -1; j < 2; j++)
+    DrawPx(paddle.x + j, paddle.y, Dark);
   
   if(timer % 30 == 0)
   {
@@ -75,10 +79,17 @@ void loop()
       ball.x--;
   }
   
+  MovePress();
+  
+  if(timer % 30 == 0)
+    MoveHold();
+  
+  for(int j = -1; j < 2; j++)
+    DrawPx(paddle.x + j, paddle.y, Blue);
   DrawPx(ball.x, ball.y, White);
   DisplaySlate();
   
-  delay(5);
+  delay(10);
   
   timer++;
 }
@@ -91,14 +102,51 @@ void reset()
   ball.y = 2;
   paddle.x = 3;
   paddle.y = 0;
-  slope = 5;
+  slope = 3;
   yvelocity = 1;
+  moved = false;
   timer = 0;
   switch (level)
   {
     case 1:
       level1();
+      Serial.println("Initiating level 1");
   }
+}
+
+
+void MovePress()
+{
+  CheckButtonsPress();
+  
+  if (Button_Right && paddle.x < 6)
+  {
+    paddle.x++;
+    moved = true;
+  }
+    
+  if (Button_Left && paddle.x > 1)
+  {
+    paddle.x--;
+    moved = true;
+  }
+}
+
+
+void MoveHold()
+{
+  if (!moved)
+  {
+    CheckButtonsDown();
+  
+    if (Button_Right && paddle.x < 6)
+      paddle.x++;
+  
+    if (Button_Left && paddle.x > 1)
+      paddle.x--;
+  }
+    
+  moved = false;
 }
 
 
@@ -106,9 +154,12 @@ void BounceY()
 {
   if (ball.y > 6)
     yvelocity = -1;
+  if (ball.y < 2)
+    PaddleCollision();
   if (ball.y < 1)
-    yvelocity = 1;
+    GameOver();
 }
+
 
 void BounceX()
 {
@@ -116,6 +167,42 @@ void BounceX()
     slope = 0 - slope;
   if (ball.x < 1)
     slope = 0 - slope;
+}
+
+
+void PaddleCollision()
+{
+  switch (paddle.x - ball.x)
+  {
+    case -1:
+      yvelocity = 1;
+      slope++;
+      break;
+    case 0:
+      yvelocity = 1;
+      break;
+    case 1:
+      yvelocity = 1;
+      slope--;
+  }
+}
+
+
+void GameOver()
+{
+  DisplaySlate();
+  delay(200);
+  for(int i=0;i<8;i++)
+    for(int j=0;j<8;j++)
+      DrawPx(i,j,Red);
+  DisplaySlate();
+  Tone_Start(ToneB2,400);
+  delay(500);
+  Tone_Start(ToneB2,400);
+  delay(500);
+  Tone_Start(ToneB2,500);
+  delay(500);
+  reset();
 }
 
 
