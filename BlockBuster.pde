@@ -45,16 +45,83 @@ point ball = {3, 2};
 point paddle = {3, 0};
 int slope = 1;
 int yvelocity = 1;
+int level = 0;
+int timer = 0;
 
 
 void setup() 
 {
   MeggyJrSimpleSetup(); 
+  reset();
 }
+
 
 void loop() 
 {
- 
+  DrawPx(ball.x, ball.y, Dark);
+  
+  if(timer % 30 == 0)
+  {
+    BounceY();
+    ball.y += yvelocity;
+  }
+  
+  if(timer % (90/slope) == 0)
+  {
+    BounceX();
+    if(slope > 0)
+      ball.x++;
+    if(slope < 0)
+      ball.x--;
+  }
+  
+  DrawPx(ball.x, ball.y, White);
+  DisplaySlate();
+  
+  delay(5);
+  
+  timer++;
 }
 
 
+void reset()
+{
+  ClearSlate();
+  ball.x = 3;
+  ball.y = 2;
+  paddle.x = 3;
+  paddle.y = 0;
+  slope = 5;
+  yvelocity = 1;
+  timer = 0;
+  switch (level)
+  {
+    case 1:
+      level1();
+  }
+}
+
+
+void BounceY()
+{
+  if (ball.y > 6)
+    yvelocity = -1;
+  if (ball.y < 1)
+    yvelocity = 1;
+}
+
+void BounceX()
+{
+  if (ball.x > 6)
+    slope = 0 - slope;
+  if (ball.x < 1)
+    slope = 0 - slope;
+}
+
+
+void level1()
+{
+  for (int i = 2; i < 6; i++)
+    for (int k = 4; k < 8; k++)
+       DrawPx(i, k, Red);
+}
