@@ -41,10 +41,9 @@
 #include <MeggyJrSimple.h>
 
 struct point {int x; int y;};
-point ball = {4, 2};
+struct projectile {int x; int y; int slope; int yvelocity; boolean inplay;};
+projectile ball[3] = {{4, 2, 3, 1, true}};
 point paddle = {3, 0};
-int slope;
-int yvelocity;
 int level;
 boolean moved;
 int timer;
@@ -54,6 +53,7 @@ void setup()
 {
   MeggyJrSimpleSetup(); 
   Serial.begin(9600);
+  EditColor(CustomColor0, 15, 0, 0);
   level = 1;
   reset();
 }
@@ -61,33 +61,35 @@ void setup()
 
 void loop() 
 {
-  DrawPx(ball.x, ball.y, Dark);
+  if (ball[1].inplay)
+    DrawPx(ball[1].x, ball[1].y, Dark);
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Dark);
   
-  if(timer % 30 == 0)
+  if (timer % 30 == 0)
   {
     BounceY();
-    ball.y += yvelocity;
+    ball[1].y += ball[1].yvelocity;
   }
   
-  if(timer % (90/slope) == 0)
+  if(timer % (90/ball[1].slope) == 0)
   {
     BounceX();
-    if(slope > 0)
-      ball.x++;
-    if(slope < 0)
-      ball.x--;
+    if (ball[1].slope > 0)
+      ball[1].x++;
+    if (ball[1].slope < 0)
+      ball[1].x--;
   }
   
   MovePress();
   
-  if(timer % 10 == 0)
+  if (timer % 10 == 0)
     MoveHold();
   
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Blue);
-  DrawPx(ball.x, ball.y, White);
+  if (ball[1].inplay)
+    DrawPx(ball[1].x, ball[1].y, White);
   DisplaySlate();
   
   delay(10);
@@ -102,12 +104,13 @@ void loop()
 void reset()
 {
   ClearSlate();
-  ball.x = 4;
-  ball.y = 2;
+  ball[1].x = random(6)+1;
+  ball[1].y = 2;
+  ball[1].slope = 3;
+  ball[1].yvelocity = 1;
+  ball[1].inplay = true;
   paddle.x = 3;
   paddle.y = 0;
-  slope = 3;
-  yvelocity = 1;
   moved = false;
   timer = 0;
   switch (level)
@@ -169,51 +172,53 @@ void MoveHold()
 
 void BounceY()
 {
-  if (ball.y > 6)
-    yvelocity = -1;
-  if (ball.y < 2)
+  if (ball[1].y > 6)
+    ball[1].yvelocity = -1;
+  if (ball[1].y < 2)
     PaddleCollision();
-  if (ball.y < 1)
+  if (ball[1].y < 1)
+    ball[1].inplay = false;
+  if (!ball[1].inplay & !ball[2].inplay & !ball[3].inplay)
     GameOver();
 }
 
 
 void BounceX()
 {
-  if (ball.x > 6)
-    slope = 0 - slope;
-  if (ball.x < 1)
-    slope = 0 - slope;
+  if (ball[1].x > 6)
+    ball[1].slope = 0 - ball[1].slope;
+  if (ball[1].x < 1)
+    ball[1].slope = 0 - ball[1].slope;
 }
 
 
 void PaddleCollision()
 {
-  switch (paddle.x - ball.x)
+  switch (paddle.x - ball[1].x)
   {
     case -2:
-      if (slope < 1)
+      if (ball[1].slope < 1)
       {
-        yvelocity = 1;
-        slope++;
+        ball[1].yvelocity = 1;
+        ball[1].slope += 2;
       }
       break;
     case -1:
-      yvelocity = 1;
-      slope++;
+      ball[1].yvelocity = 1;
+      ball[1].slope++;
       break;
     case 0:
-      yvelocity = 1;
+      ball[1].yvelocity = 1;
       break;
     case 1:
-      yvelocity = 1;
-      slope--;
+      ball[1].yvelocity = 1;
+      ball[1].slope--;
       break;
     case 2:
-      if (slope > 1)
+      if (ball[1].slope > 1)
       {
-        yvelocity = 1;
-        slope--;
+        ball[1].yvelocity = 1;
+        ball[1].slope -= 2;
       }
   }
 }
@@ -223,8 +228,17 @@ boolean CheckVictory()
 {
   for (int p = 0; p < 8; p++)
     for (int o = 0; o < 8; o++)
-      if (ReadPx(o, p) == Red || ReadPx(o, p) == Green)
-        return false;
+      switch (ReadPx(o, p))
+      {
+        case 1:
+          return false;
+          break;
+        case 2:
+          return false;
+          break;
+        case 3:
+          return false;
+      }
   return true;
 }
 
@@ -252,7 +266,7 @@ void GameOver()
   delay(200);
   for(int i=0;i<8;i++)
     for(int j=0;j<8;j++)
-      DrawPx(i,j,Red);
+      DrawPx(i,j,CustomColor0);
   DisplaySlate();
   Tone_Start(ToneB2,400);
   delay(500);
