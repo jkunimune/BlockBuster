@@ -61,24 +61,24 @@ void setup()
 
 void loop() 
 {
-  if (ball[1].inplay)
-    DrawPx(ball[1].x, ball[1].y, Dark);
+  if (ball[0].inplay)
+    DrawPx(ball[0].x, ball[0].y, Dark);
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Dark);
   
   if (timer % 30 == 0)
   {
     BounceY();
-    ball[1].y += ball[1].yvelocity;
+    ball[0].y += ball[0].yvelocity;
   }
   
-  if(timer % (90/ball[1].slope) == 0)
+  if(timer % (90/ball[0].slope) == 0)
   {
     BounceX();
-    if (ball[1].slope > 0)
-      ball[1].x++;
-    if (ball[1].slope < 0)
-      ball[1].x--;
+    if (ball[0].slope > 0)
+      ball[0].x++;
+    if (ball[0].slope < 0)
+      ball[0].x--;
   }
   
   MovePress();
@@ -88,8 +88,8 @@ void loop()
   
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Blue);
-  if (ball[1].inplay)
-    DrawPx(ball[1].x, ball[1].y, White);
+  if (ball[0].inplay)
+    DrawPx(ball[0].x, ball[0].y, White);
   DisplaySlate();
   
   delay(10);
@@ -104,11 +104,15 @@ void loop()
 void reset()
 {
   ClearSlate();
-  ball[1].x = random(6)+1;
-  ball[1].y = 2;
-  ball[1].slope = 3;
-  ball[1].yvelocity = 1;
-  ball[1].inplay = true;
+  for (int i = 0; i < 3; i++)
+  {
+    ball[i].x = random(6)+1;
+    ball[i].y = 2;
+    ball[i].slope = 3;
+    ball[i].yvelocity = 1;
+    ball[i].inplay = false;
+  }
+    ball[0].inplay = true;
   paddle.x = 3;
   paddle.y = 0;
   moved = false;
@@ -172,53 +176,53 @@ void MoveHold()
 
 void BounceY()
 {
-  if (ball[1].y > 6)
-    ball[1].yvelocity = -1;
-  if (ball[1].y < 2)
+  if (ball[0].y > 6)
+    ball[0].yvelocity = -1;
+  if (ball[0].y < 2)
     PaddleCollision();
-  if (ball[1].y < 1)
-    ball[1].inplay = false;
-  if (!ball[1].inplay & !ball[2].inplay & !ball[3].inplay)
+  if (ball[0].y < 1)
+    ball[0].inplay = false;
+  if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
     GameOver();
 }
 
 
 void BounceX()
 {
-  if (ball[1].x > 6)
-    ball[1].slope = 0 - ball[1].slope;
-  if (ball[1].x < 1)
-    ball[1].slope = 0 - ball[1].slope;
+  if (ball[0].x > 6)
+    ball[0].slope = 0 - ball[0].slope;
+  if (ball[0].x < 1)
+    ball[0].slope = 0 - ball[0].slope;
 }
 
 
 void PaddleCollision()
 {
-  switch (paddle.x - ball[1].x)
+  switch (paddle.x - ball[0].x)
   {
     case -2:
-      if (ball[1].slope < 1)
+      if (ball[0].slope < 1)
       {
-        ball[1].yvelocity = 1;
-        ball[1].slope += 2;
+        ball[0].yvelocity = 1;
+        ball[0].slope += 2;
       }
       break;
     case -1:
-      ball[1].yvelocity = 1;
-      ball[1].slope++;
+      ball[0].yvelocity = 1;
+      ball[0].slope++;
       break;
     case 0:
-      ball[1].yvelocity = 1;
+      ball[0].yvelocity = 1;
       break;
     case 1:
-      ball[1].yvelocity = 1;
-      ball[1].slope--;
+      ball[0].yvelocity = 1;
+      ball[0].slope--;
       break;
     case 2:
-      if (ball[1].slope > 1)
+      if (ball[0].slope > 1)
       {
-        ball[1].yvelocity = 1;
-        ball[1].slope -= 2;
+        ball[0].yvelocity = 1;
+        ball[0].slope -= 2;
       }
   }
 }
