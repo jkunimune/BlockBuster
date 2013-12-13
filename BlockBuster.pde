@@ -176,10 +176,12 @@ void MoveHold()
 
 void BounceY()
 {
-  if (ball[0].y > 6)
+  if (ball[0].y > 6 || ReadPx(ball[0].x, ball[0].y+1) > 0)
     ball[0].yvelocity = -1;
+  if (ReadPx(ball[0].x, ball[0].y-1) > 0)
+    ball[0].yvelocity = 1;
   if (ball[0].y < 2)
-    PaddleCollision();
+    SlopeChange();
   if (ball[0].y < 1)
     ball[0].inplay = false;
   if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
@@ -189,14 +191,14 @@ void BounceY()
 
 void BounceX()
 {
-  if (ball[0].x > 6)
-    ball[0].slope = 0 - ball[0].slope;
-  if (ball[0].x < 1)
-    ball[0].slope = 0 - ball[0].slope;
+  if (ball[0].x > 6 || ReadPx(ball[0].x+1, ball[0].y) > 0)
+    ball[0].slope = 0 - abs(ball[0].slope);
+  if (ball[0].x < 1 || ReadPx(ball[0].x-1, ball[0].y) > 0)
+    ball[0].slope = abs(ball[0].slope);
 }
 
 
-void PaddleCollision()
+void SlopeChange()
 {
   switch (paddle.x - ball[0].x)
   {
