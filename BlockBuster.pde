@@ -61,10 +61,7 @@ void setup()
 
 void loop() 
 {
-  if (ball[0].inplay)
-    DrawPx(ball[0].x, ball[0].y, Dark);
-  for(int j = -1; j < 2; j++)
-    DrawPx(paddle.x + j, paddle.y, Dark);
+  EraseObjects();
   
   if (timer % 30 == 0)
   {
@@ -72,7 +69,7 @@ void loop()
     ball[0].y += ball[0].yvelocity;
   }
   
-  if(timer % (90/ball[0].slope) == 0)
+  if(timer % (60/ball[0].slope) == 0)
   {
     BounceX();
     if (ball[0].slope > 0)
@@ -81,20 +78,18 @@ void loop()
       ball[0].x--;
   }
   
+  StopTeleport();
+  
   MovePress();
   
   if (timer % 10 == 0)
     MoveHold();
   
-  for(int j = -1; j < 2; j++)
-    DrawPx(paddle.x + j, paddle.y, Blue);
-  if (ball[0].inplay)
-    DrawPx(ball[0].x, ball[0].y, White);
-  DisplaySlate();
+  DrawObjects();
   
   delay(10);
   
-  if (CheckVictory())
+  if (YouHaveWon())
     RunVictory();
   
   timer++;
@@ -103,16 +98,18 @@ void loop()
 
 void reset()
 {
+  Serial.print("Now executing reset for level ");
+  Serial.println(level);
   ClearSlate();
   for (int i = 0; i < 3; i++)
   {
     ball[i].x = random(6)+1;
     ball[i].y = 2;
-    ball[i].slope = 3;
+    ball[i].slope = 2;
     ball[i].yvelocity = 1;
     ball[i].inplay = false;
   }
-    ball[0].inplay = true;
+  ball[0].inplay = true;
   paddle.x = 3;
   paddle.y = 0;
   moved = false;
@@ -120,22 +117,54 @@ void reset()
   switch (level)
   {
     case 1:
-      level1();
+      Level1();
       Serial.println("Initiating level 1");
       break;
     case 2:
-      level2();
+      Level2();
       Serial.println("Initiating level 2");
       break;
     case 3:
-      level3();
+      Level3();
       Serial.println("Initiating level 3");
       break;
     case 4:
-      level4();
+      Level4();
       Serial.println("Initiating level 4");
       break;
   }
+}
+
+
+void EraseObjects()
+{
+  if (ball[0].inplay)
+    DrawPx(ball[0].x, ball[0].y, Dark);
+  for(int j = -1; j < 2; j++)
+    DrawPx(paddle.x + j, paddle.y, Dark);
+}
+
+
+void DrawObjects()
+{
+  for(int j = -1; j < 2; j++)
+    DrawPx(paddle.x + j, paddle.y, Blue);
+  if (ball[0].inplay)
+    DrawPx(ball[0].x, ball[0].y, White);
+  DisplaySlate();
+}
+
+
+void StopTeleport()
+{
+  if (ball[0].x > 7)
+    ball[0].x = 7;
+  if (ball[0].x < 0)
+    ball[0].x = 0;
+  if (ball[0].y > 7)
+    ball[0].y = 7;
+  if (ball[0].y < 0)
+    ball[0].y = 0;
 }
 
 
@@ -176,10 +205,18 @@ void MoveHold()
 
 void BounceY()
 {
-  if (ball[0].y > 6 || ReadPx(ball[0].x, ball[0].y+1) > 0)
+  if (ball[0].y > 6)
     ball[0].yvelocity = -1;
+  if (ReadPx(ball[0].x, ball[0].y+1) > 0)
+  {
+    ball[0].yvelocity = -1;
+    DrawPx(ball[0].x, ball[0].y+1, ReadPx(ball[0].x, ball[0].y+1) - 1);
+  }
   if (ReadPx(ball[0].x, ball[0].y-1) > 0)
+  {
     ball[0].yvelocity = 1;
+    DrawPx(ball[0].x, ball[0].y-1, ReadPx(ball[0].x, ball[0].y-1) - 1);
+  }
   if (ball[0].y < 2)
     SlopeChange();
   if (ball[0].y < 1)
@@ -191,10 +228,20 @@ void BounceY()
 
 void BounceX()
 {
-  if (ball[0].x > 6 || ReadPx(ball[0].x+1, ball[0].y) > 0)
+  if (ball[0].x > 6)
     ball[0].slope = 0 - abs(ball[0].slope);
-  if (ball[0].x < 1 || ReadPx(ball[0].x-1, ball[0].y) > 0)
+  if (ReadPx(ball[0].x+1, ball[0].y) > 0)
+  {
+    ball[0].slope = 0 - abs(ball[0].slope);
+    DrawPx(ball[0].x+1, ball[0].y, ReadPx(ball[0].x+1, ball[0].y) - 1);
+  }
+  if (ball[0].x < 1)
     ball[0].slope = abs(ball[0].slope);
+  if (ReadPx(ball[0].x-1, ball[0].y) > 0)
+  {
+    ball[0].slope = abs(ball[0].slope);
+    DrawPx(ball[0].x-1, ball[0].y, ReadPx(ball[0].x-1, ball[0].y) - 1);
+  }
 }
 
 
@@ -230,7 +277,7 @@ void SlopeChange()
 }
 
 
-boolean CheckVictory()
+boolean YouHaveWon()
 {
   for (int p = 0; p < 8; p++)
     for (int o = 0; o < 8; o++)
@@ -251,6 +298,9 @@ boolean CheckVictory()
 
 void RunVictory()
 {
+  Serial.print("You beat level ");
+  Serial.print(level);
+  Serial.println("!");
   for(int i=0;i<8;i++)
     for(int j=0;j<8;j++)
       DrawPx(i,j,Green);
@@ -261,7 +311,11 @@ void RunVictory()
   delay(150);
   Tone_Start(ToneC6,150);
   delay(150);
+  Serial.print("Incrementing to level ");
+  Serial.println(level + 1);
   level++;
+  Serial.print("You are now on level ");
+  Serial.println(level);
   reset();
 }
 
@@ -284,7 +338,7 @@ void GameOver()
 }
 
 
-void level1()
+void Level1()
 {
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
@@ -292,7 +346,7 @@ void level1()
 }
 
 
-void level2()
+void Level2()
 {
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
@@ -302,7 +356,7 @@ void level2()
 }
 
 
-void level3()
+void Level3()
 {
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
@@ -315,7 +369,7 @@ void level3()
 }
 
 
-void level4()
+void Level4()
 {
   for (int i = 2; i < 6; i++)
     for (int k = 6; k < 8; k++)
