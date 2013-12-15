@@ -63,22 +63,7 @@ void loop()
 {
   EraseObjects();
   
-  if (timer % 30 == 0)
-  {
-    BounceY();
-    ball[0].y += ball[0].yvelocity;
-  }
-  
-  if(timer % (60/ball[0].slope) == 0)
-  {
-    BounceX();
-    if (ball[0].slope > 0)
-      ball[0].x++;
-    if (ball[0].slope < 0)
-      ball[0].x--;
-  }
-  
-  StopTeleport();
+  UpdateBall();
   
   MovePress();
   
@@ -155,6 +140,34 @@ void DrawObjects()
 }
 
 
+void UpdateBall()
+{
+  if(timer % (60/ball[0].slope) == 0)
+    BounceX();
+  
+  if (timer % 30 == 0)
+    BounceY();
+    
+  if (timer % (60/ball[0].slope) == 0 && timer % 30 == 0)
+    BounceDiagonal();
+  
+  if(timer % (60/ball[0].slope) == 0)
+  {
+    if (ball[0].slope > 0)
+      ball[0].x++;
+    if (ball[0].slope < 0)
+      ball[0].x--;
+  }
+  
+  if (timer % 30 == 0)
+  {
+    ball[0].y += ball[0].yvelocity;
+  }
+  
+  StopTeleport();
+}
+
+
 void StopTeleport()
 {
   if (ball[0].x > 7)
@@ -205,20 +218,26 @@ void MoveHold()
 
 void BounceY()
 {
-  if (ball[0].y > 6)
-    ball[0].yvelocity = -1;
-  if (ReadPx(ball[0].x, ball[0].y+1) > 0)
+  if (ball[0].yvelocity > 0)
   {
-    ball[0].yvelocity = -1;
-    DrawPx(ball[0].x, ball[0].y+1, ReadPx(ball[0].x, ball[0].y+1) - 1);
+    if (ball[0].y > 6)
+      ball[0].yvelocity = -1;
+    if (ReadPx(ball[0].x, ball[0].y+1) > 0)
+    {
+      ball[0].yvelocity = -1;
+      DrawPx(ball[0].x, ball[0].y+1, ReadPx(ball[0].x, ball[0].y+1) - 1);
+    }
   }
-  if (ReadPx(ball[0].x, ball[0].y-1) > 0)
+  if (ball[0].yvelocity < 0)
   {
-    ball[0].yvelocity = 1;
-    DrawPx(ball[0].x, ball[0].y-1, ReadPx(ball[0].x, ball[0].y-1) - 1);
+    if (ReadPx(ball[0].x, ball[0].y-1) > 0)
+    {
+      ball[0].yvelocity = 1;
+      DrawPx(ball[0].x, ball[0].y-1, ReadPx(ball[0].x, ball[0].y-1) - 1);
+    }
+    if (ball[0].y < 2)
+      SlopeChange();
   }
-  if (ball[0].y < 2)
-    SlopeChange();
   if (ball[0].y < 1)
     ball[0].inplay = false;
   if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
@@ -228,22 +247,64 @@ void BounceY()
 
 void BounceX()
 {
-  if (ball[0].x > 6)
-    ball[0].slope = 0 - abs(ball[0].slope);
-  if (ReadPx(ball[0].x+1, ball[0].y) > 0)
+  if (ball[0].slope > 0)
   {
-    ball[0].slope = 0 - abs(ball[0].slope);
-    DrawPx(ball[0].x+1, ball[0].y, ReadPx(ball[0].x+1, ball[0].y) - 1);
+    if (ball[0].x > 6)
+      ball[0].slope = -ball[0].slope;
+    if (ReadPx(ball[0].x+1, ball[0].y) > 0)
+    {
+      ball[0].slope = -ball[0].slope;
+      DrawPx(ball[0].x+1, ball[0].y, ReadPx(ball[0].x+1, ball[0].y) - 1);
+    }
   }
-  if (ball[0].x < 1)
-    ball[0].slope = abs(ball[0].slope);
-  if (ReadPx(ball[0].x-1, ball[0].y) > 0)
+  if (ball[0].slope < 0)
   {
-    ball[0].slope = abs(ball[0].slope);
-    DrawPx(ball[0].x-1, ball[0].y, ReadPx(ball[0].x-1, ball[0].y) - 1);
+    if (ball[0].x < 1)
+      ball[0].slope = abs(ball[0].slope);
+    if (ReadPx(ball[0].x-1, ball[0].y) > 0)
+    {
+      ball[0].slope = abs(ball[0].slope);
+      DrawPx(ball[0].x-1, ball[0].y, ReadPx(ball[0].x-1, ball[0].y) - 1);
+    }
   }
 }
 
+
+void BounceDiagonal()
+{
+  if (ball[0].slope > 0 && ball[0].yvelocity > 0)
+    if (ReadPx(ball[0].x+1, ball[0].y+1) > 0)
+    {
+      ball[0].slope = -ball[0].slope;
+      ball[0].yvelocity = -1;
+      DrawPx(ball[0].x+1, ball[0].y+1, ReadPx(ball[0].x+1, ball[0].y+1)-1);
+    }
+  
+  if (ball[0].slope > 0 && ball[0].yvelocity < 0)
+    if (ReadPx(ball[0].x+1, ball[0].y-1) > 0)
+    {
+      ball[0].slope = -ball[0].slope;
+      ball[0].yvelocity = 1;
+      DrawPx(ball[0].x+1, ball[0].y-1, ReadPx(ball[0].x+1, ball[0].y-1)-1);
+    }
+  
+  if (ball[0].slope < 0 && ball[0].yvelocity > 0)
+    if (ReadPx(ball[0].x-1, ball[0].y+1) > 0)
+    {
+      ball[0].slope = abs(ball[0].slope);
+      ball[0].yvelocity = -1;
+      DrawPx(ball[0].x-1, ball[0].y+1, ReadPx(ball[0].x-1, ball[0].y+1)-1);
+    }
+  
+  if (ball[0].slope < 0 && ball[0].yvelocity < 0)
+    if (ReadPx(ball[0].x-1, ball[0].y-1) > 0)
+    {
+      ball[0].slope = abs(ball[0].slope);
+      ball[0].yvelocity = 1;
+      DrawPx(ball[0].x-1, ball[0].y-1, ReadPx(ball[0].x-1, ball[0].y-1));
+    }
+}
+  
 
 void SlopeChange()
 {
