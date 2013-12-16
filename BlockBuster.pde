@@ -54,6 +54,9 @@ void setup()
   MeggyJrSimpleSetup(); 
   Serial.begin(9600);
   EditColor(CustomColor0, 15, 0, 0);
+  EditColor(CustomColor1, 10, 0, 10);
+  EditColor(CustomColor2, 10, 0, 10);
+  EditColor(CustomColor3, 10, 0, 10);
   level = 1;
   reset();
 }
@@ -65,10 +68,9 @@ void loop()
   
   UpdateBall();
   
-  MovePress();
+  UpdatePowerups();
   
-  if (timer % 10 == 0)
-    MoveHold();
+  UpdatePaddle();
   
   DrawObjects();
   
@@ -140,6 +142,26 @@ void DrawObjects()
 }
 
 
+void UpdatePowerups()
+{
+  if (timer % 20 == 0)
+  {
+    for(int b = 0; b < 8; b++)
+      for(int c = 0; c < 8; c++)
+        if(ReadPx(b, c) == CustomColor2)
+        {
+          DrawPx(b, c, Dark);
+          DrawPx(b, c - 1, CustomColor2);
+        }
+      
+    for(int b = 0; b < 8; b++)
+      for(int c = 0; c < 8; c++)
+        if(ReadPx(b, c) == CustomColor1)
+          DrawPx(b, c, Dark);
+  }
+}
+
+
 void UpdateBall()
 {
   if(timer % (60/ball[0].slope) == 0)
@@ -178,6 +200,15 @@ void StopTeleport()
     ball[0].y = 7;
   if (ball[0].y < 0)
     ball[0].y = 0;
+}
+
+
+void UpdatePaddle()
+{
+  MovePress();
+  
+  if (timer % 10 == 0)
+    MoveHold();
 }
 
 
@@ -404,6 +435,7 @@ void Level1()
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
        DrawPx(i, k, Red);
+  DrawPx(3, 6, CustomColor3);
 }
 
 
