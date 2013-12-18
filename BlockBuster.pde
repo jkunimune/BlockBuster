@@ -125,8 +125,9 @@ void reset()
 
 void EraseObjects()
 {
-  if (ball[0].inplay)
-    DrawPx(ball[0].x, ball[0].y, Dark);
+  for (int v = 0; v < 3; v++)
+    if (ball[v].inplay)
+      DrawPx(ball[v].x, ball[v].y, Dark);
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Dark);
 }
@@ -134,10 +135,11 @@ void EraseObjects()
 
 void DrawObjects()
 {
+  for (int u = 0; u < 3; u++)
+    if (ball[u].inplay)
+      DrawPx(ball[u].x, ball[u].y, White);
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Blue);
-  if (ball[0].inplay)
-    DrawPx(ball[0].x, ball[0].y, White);
   DisplaySlate();
 }
 
@@ -159,47 +161,61 @@ void UpdatePowerups()
         if(ReadPx(b, c) == CustomColor1)
           DrawPx(b, c, Dark);
   }
+  for (int v = -1; v < 2; v++)
+    if (ReadPx(paddle.x + v, paddle.y) == CustomColor2)
+      switch (random(4))
+      {
+        default:
+          MultiBall();
+      }  
 }
 
 
 void UpdateBall()
 {
-  if(timer % (60/ball[0].slope) == 0)
-    BounceX();
-  
-  if (timer % 30 == 0)
-    BounceY();
+  for (int n = 0; n < 3; n++)
+    if (ball[n].inplay)
+    {
+      if(timer % (60/ball[n].slope) == 0)
+        BounceX(n);
     
-  if (timer % (60/ball[0].slope) == 0 && timer % 30 == 0)
-    BounceDiagonal();
+      if (timer % 30 == 0)
+        BounceY(n);
+    
+      if (timer % (60/ball[n].slope) == 0 && timer % 30 == 0)
+        BounceDiagonal(n);
   
-  if(timer % (60/ball[0].slope) == 0)
-  {
-    if (ball[0].slope > 0)
-      ball[0].x++;
-    if (ball[0].slope < 0)
-      ball[0].x--;
-  }
+      if(timer % (60/ball[n].slope) == 0)
+      {
+        if (ball[n].slope > 0)
+          ball[n].x++;
+        if (ball[n].slope < 0)
+          ball[n].x--;
+      }
+
+      if (timer % 30 == 0)
+      {
+        ball[n].y += ball[n].yvelocity;
+      }
   
-  if (timer % 30 == 0)
-  {
-    ball[0].y += ball[0].yvelocity;
-  }
+      StopTeleport(n);
+    }
   
-  StopTeleport();
+  if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
+    GameOver();
 }
 
 
-void StopTeleport()
+void StopTeleport(int index)
 {
-  if (ball[0].x > 7)
-    ball[0].x = 7;
-  if (ball[0].x < 0)
-    ball[0].x = 0;
-  if (ball[0].y > 7)
-    ball[0].y = 7;
-  if (ball[0].y < 0)
-    ball[0].y = 0;
+  if (ball[index].x > 7)
+    ball[index].x = 7;
+  if (ball[index].x < 0)
+    ball[index].x = 0;
+  if (ball[index].y > 7)
+    ball[index].y = 7;
+  if (ball[index].y < 0)
+    ball[index].y = 0;
 }
 
 
@@ -247,126 +263,146 @@ void MoveHold()
 }
 
 
-void BounceY()
+void BounceY(int index)
 {
-  if (ball[0].yvelocity > 0)
+  if (ball[index].yvelocity > 0)
   {
-    if (ball[0].y > 6)
-      ball[0].yvelocity = -1;
-    if (ReadPx(ball[0].x, ball[0].y+1) > 0)
+    if (ball[index].y > 6)
+      ball[index].yvelocity = -1;
+    if (ReadPx(ball[index].x, ball[index].y+1) > 0)
     {
-      ball[0].yvelocity = -1;
-      DrawPx(ball[0].x, ball[0].y+1, ReadPx(ball[0].x, ball[0].y+1) - 1);
+      ball[index].yvelocity = -1;
+      DrawPx(ball[index].x, ball[index].y+1, ReadPx(ball[index].x, ball[index].y+1) - 1);
     }
   }
-  if (ball[0].yvelocity < 0)
+  if (ball[index].yvelocity < 0)
   {
-    if (ReadPx(ball[0].x, ball[0].y-1) > 0)
+    if (ReadPx(ball[index].x, ball[index].y-1) > 0)
     {
-      ball[0].yvelocity = 1;
-      DrawPx(ball[0].x, ball[0].y-1, ReadPx(ball[0].x, ball[0].y-1) - 1);
+      ball[index].yvelocity = 1;
+      DrawPx(ball[index].x, ball[index].y-1, ReadPx(ball[index].x, ball[index].y-1) - 1);
     }
-    if (ball[0].y < 2)
-      SlopeChange();
+    if (ball[index].y < 2)
+      SlopeChange(index);
   }
-  if (ball[0].y < 1)
-    ball[0].inplay = false;
-  if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
-    GameOver();
+  if (ball[index].y < 1)
+    ball[index].inplay = false;
 }
 
 
-void BounceX()
+void BounceX(int index)
 {
-  if (ball[0].slope > 0)
+  if (ball[index].slope > 0)
   {
-    if (ball[0].x > 6)
-      ball[0].slope = -ball[0].slope;
-    if (ReadPx(ball[0].x+1, ball[0].y) > 0)
+    if (ball[index].x > 6)
+      ball[index].slope = -ball[index].slope;
+    if (ReadPx(ball[index].x+1, ball[index].y) > 0)
     {
-      ball[0].slope = -ball[0].slope;
-      DrawPx(ball[0].x+1, ball[0].y, ReadPx(ball[0].x+1, ball[0].y) - 1);
+      ball[index].slope = -ball[index].slope;
+      DrawPx(ball[index].x+1, ball[index].y, ReadPx(ball[index].x+1, ball[index].y) - 1);
     }
   }
-  if (ball[0].slope < 0)
+  if (ball[index].slope < 0)
   {
-    if (ball[0].x < 1)
-      ball[0].slope = abs(ball[0].slope);
-    if (ReadPx(ball[0].x-1, ball[0].y) > 0)
+    if (ball[index].x < 1)
+      ball[index].slope = abs(ball[index].slope);
+    if (ReadPx(ball[index].x-1, ball[index].y) > 0)
     {
-      ball[0].slope = abs(ball[0].slope);
-      DrawPx(ball[0].x-1, ball[0].y, ReadPx(ball[0].x-1, ball[0].y) - 1);
+      ball[index].slope = abs(ball[index].slope);
+      DrawPx(ball[index].x-1, ball[index].y, ReadPx(ball[index].x-1, ball[index].y) - 1);
     }
   }
 }
 
 
-void BounceDiagonal()
+void BounceDiagonal(int index)
 {
-  if (ball[0].slope > 0 && ball[0].yvelocity > 0)
-    if (ReadPx(ball[0].x+1, ball[0].y+1) > 0)
+  if (ball[index].slope > 0 && ball[index].yvelocity > 0)
+    if (ReadPx(ball[index].x+1, ball[index].y+1) > 0)
     {
-      ball[0].slope = -ball[0].slope;
-      ball[0].yvelocity = -1;
-      DrawPx(ball[0].x+1, ball[0].y+1, ReadPx(ball[0].x+1, ball[0].y+1)-1);
+      ball[index].slope = -ball[index].slope;
+      ball[index].yvelocity = -1;
+      DrawPx(ball[index].x+1, ball[index].y+1, ReadPx(ball[index].x+1, ball[index].y+1)-1);
     }
   
-  if (ball[0].slope > 0 && ball[0].yvelocity < 0)
-    if (ReadPx(ball[0].x+1, ball[0].y-1) > 0)
+  if (ball[index].slope > 0 && ball[index].yvelocity < 0)
+    if (ReadPx(ball[index].x+1, ball[index].y-1) > 0)
     {
-      ball[0].slope = -ball[0].slope;
-      ball[0].yvelocity = 1;
-      DrawPx(ball[0].x+1, ball[0].y-1, ReadPx(ball[0].x+1, ball[0].y-1)-1);
+      ball[index].slope = -ball[0].slope;
+      ball[index].yvelocity = 1;
+      DrawPx(ball[index].x+1, ball[index].y-1, ReadPx(ball[index].x+1, ball[index].y-1)-1);
     }
   
-  if (ball[0].slope < 0 && ball[0].yvelocity > 0)
-    if (ReadPx(ball[0].x-1, ball[0].y+1) > 0)
+  if (ball[index].slope < 0 && ball[index].yvelocity > 0)
+    if (ReadPx(ball[index].x-1, ball[index].y+1) > 0)
     {
-      ball[0].slope = abs(ball[0].slope);
-      ball[0].yvelocity = -1;
-      DrawPx(ball[0].x-1, ball[0].y+1, ReadPx(ball[0].x-1, ball[0].y+1)-1);
+      ball[index].slope = abs(ball[index].slope);
+      ball[index].yvelocity = -1;
+      DrawPx(ball[index].x-1, ball[index].y+1, ReadPx(ball[index].x-1, ball[index].y+1)-1);
     }
   
-  if (ball[0].slope < 0 && ball[0].yvelocity < 0)
-    if (ReadPx(ball[0].x-1, ball[0].y-1) > 0)
+  if (ball[index].slope < 0 && ball[index].yvelocity < 0)
+    if (ReadPx(ball[index].x-1, ball[index].y-1) > 0)
     {
-      ball[0].slope = abs(ball[0].slope);
-      ball[0].yvelocity = 1;
-      DrawPx(ball[0].x-1, ball[0].y-1, ReadPx(ball[0].x-1, ball[0].y-1));
+      ball[index].slope = abs(ball[index].slope);
+      ball[index].yvelocity = 1;
+      DrawPx(ball[index].x-1, ball[index].y-1, ReadPx(ball[index].x-1, ball[index].y-1)-1);
     }
 }
   
 
-void SlopeChange()
+void SlopeChange(int ballindex)
 {
-  switch (paddle.x - ball[0].x)
+  switch (paddle.x - ball[ballindex].x)
   {
     case -2:
-      if (ball[0].slope < 1)
+      if (ball[ballindex].slope < 1)
       {
-        ball[0].yvelocity = 1;
-        ball[0].slope += 2;
+        ball[ballindex].yvelocity = 1;
+        ball[ballindex].slope += 2;
       }
       break;
     case -1:
-      ball[0].yvelocity = 1;
-      ball[0].slope++;
+      ball[ballindex].yvelocity = 1;
+      ball[ballindex].slope++;
       break;
     case 0:
-      ball[0].yvelocity = 1;
+      ball[ballindex].yvelocity = 1;
       break;
     case 1:
-      ball[0].yvelocity = 1;
-      ball[0].slope--;
+      ball[ballindex].yvelocity = 1;
+      ball[ballindex].slope--;
       break;
     case 2:
-      if (ball[0].slope > 1)
+      if (ball[ballindex].slope > 1)
       {
-        ball[0].yvelocity = 1;
-        ball[0].slope -= 2;
+        ball[ballindex].yvelocity = 1;
+        ball[ballindex].slope -= 2;
       }
   }
 }
+
+
+void MultiBall()
+{
+  for (int g = 0; g < 3; g++)
+    if (ball[g].inplay)
+    {
+      ball[(g+1)%3].x = ball[g].x;
+      ball[(g+1)%3].y = ball[g].y;
+      ball[(g+1)%3].slope = -ball[g].slope;
+      ball[(g+1)%3].yvelocity = ball[g].yvelocity;
+      ball[(g+1)%3].inplay = true;
+      ball[(g+2)%3].x = ball[g].x;
+      ball[(g+2)%3].y = ball[g].y;
+      ball[(g+2)%3].slope = ball[g].slope;
+      ball[(g+2)%3].yvelocity = -ball[g].yvelocity;
+      ball[(g+2)%3].inplay = true;
+    }
+}
+
+
+
 
 
 boolean YouHaveWon()
