@@ -47,6 +47,7 @@ point paddle = {3, 0};
 int level;
 boolean moved;
 boolean oneup;
+int onfire;
 int timer;
 
 
@@ -103,6 +104,8 @@ void reset()
   paddle.y = 0;
   moved = false;
   oneup = false;
+  onfire = 0;
+  EditColor(White, 13, 4, 3);
   timer = 0;
   switch (level)
   {
@@ -174,8 +177,11 @@ void UpdatePowerups()
         case 1:
           InstaLaser();
           break;
-        default:
+        case 2:
           OneUp();
+          break;
+        default:
+          Fireball();
       }  
 }
 
@@ -209,6 +215,13 @@ void UpdateBall()
   
       StopTeleport(n);
     }
+    
+    if (onfire > 0)
+      onfire--;
+    else if (oneup)
+      EditColor(White, 15, 12, 4);
+    else
+      EditColor(White, 13, 4, 3);
   
   if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
     GameOver();
@@ -232,7 +245,7 @@ void UpdatePaddle()
 {
   MovePress();
   
-  if (timer % 10 == 0)
+  if (timer % 20 == 0)
     MoveHold();
 }
 
@@ -279,25 +292,27 @@ void BounceY(int index)
     if (ball[index].y > 6)
     {
       ball[index].yvelocity = -1;
-      Tone_Start(ToneB4, 50);
+      //Tone_Start(ToneB4, 50);
     }
-    if (ReadPx(ball[index].x, ball[index].y+1) > 0)
+    if (ReadPx(ball[index].x, ball[index].y+1) > 0 && onfire == 0)
     {
       ball[index].yvelocity = -1;
       DrawPx(ball[index].x, ball[index].y+1, ReadPx(ball[index].x, ball[index].y+1) - 1);
-      Tone_Start(ToneB3, 50);
+      //Tone_Start(ToneB3, 50);
     }
   }
   if (ball[index].yvelocity < 0)
   {
-    if (ReadPx(ball[index].x, ball[index].y-1) > 0)
+    if (ReadPx(ball[index].x, ball[index].y-1) > 0 && onfire == 0)
     {
       ball[index].yvelocity = 1;
       DrawPx(ball[index].x, ball[index].y-1, ReadPx(ball[index].x, ball[index].y-1) - 1);
-      Tone_Start(ToneB3, 50);
+      //Tone_Start(ToneB3, 50);
     }
     if (ball[index].y < 2)
+    {
       SlopeChange(index);
+    }
   }
   if (ball[index].y < 1)
     ball[index].inplay = false;
@@ -313,7 +328,7 @@ void BounceX(int index)
       ball[index].slope = -ball[index].slope;
       Tone_Start(ToneB4, 50);
     }
-    if (ReadPx(ball[index].x+1, ball[index].y) > 0)
+    if (ReadPx(ball[index].x+1, ball[index].y) > 0 && onfire == 0)
     {
       ball[index].slope = -ball[index].slope;
       DrawPx(ball[index].x+1, ball[index].y, ReadPx(ball[index].x+1, ball[index].y) - 1);
@@ -327,7 +342,7 @@ void BounceX(int index)
       ball[index].slope = abs(ball[index].slope);
       Tone_Start(ToneB4, 50);
     }
-    if (ReadPx(ball[index].x-1, ball[index].y) > 0)
+    if (ReadPx(ball[index].x-1, ball[index].y) > 0 && onfire == 0)
     {
       ball[index].slope = abs(ball[index].slope);
       DrawPx(ball[index].x-1, ball[index].y, ReadPx(ball[index].x-1, ball[index].y) - 1);
@@ -340,7 +355,7 @@ void BounceX(int index)
 void BounceDiagonal(int index)
 {
   if (ball[index].slope > 0 && ball[index].yvelocity > 0)
-    if (ReadPx(ball[index].x+1, ball[index].y+1) > 0)
+    if (ReadPx(ball[index].x+1, ball[index].y+1) > 0 && onfire == 0)
     {
       ball[index].slope = -ball[index].slope;
       ball[index].yvelocity = -1;
@@ -349,7 +364,7 @@ void BounceDiagonal(int index)
     }
   
   if (ball[index].slope > 0 && ball[index].yvelocity < 0)
-    if (ReadPx(ball[index].x+1, ball[index].y-1) > 0)
+    if (ReadPx(ball[index].x+1, ball[index].y-1) > 0 && onfire == 0)
     {
       ball[index].slope = -ball[0].slope;
       ball[index].yvelocity = 1;
@@ -358,7 +373,7 @@ void BounceDiagonal(int index)
     }
   
   if (ball[index].slope < 0 && ball[index].yvelocity > 0)
-    if (ReadPx(ball[index].x-1, ball[index].y+1) > 0)
+    if (ReadPx(ball[index].x-1, ball[index].y+1) > 0 && onfire == 0)
     {
       ball[index].slope = abs(ball[index].slope);
       ball[index].yvelocity = -1;
@@ -367,7 +382,7 @@ void BounceDiagonal(int index)
     }
   
   if (ball[index].slope < 0 && ball[index].yvelocity < 0)
-    if (ReadPx(ball[index].x-1, ball[index].y-1) > 0)
+    if (ReadPx(ball[index].x-1, ball[index].y-1) > 0 && onfire == 0)
     {
       ball[index].slope = abs(ball[index].slope);
       ball[index].yvelocity = 1;
@@ -457,6 +472,14 @@ void OneUp()
 {
   EditColor(White, 15, 12, 4);
   oneup = true;
+}
+
+
+void Fireball()
+{
+  EditColor(White, 25, 1, 0);
+  onfire = 1000;
+  Serial.println("You are now on fire.");
 }
 
 
