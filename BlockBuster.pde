@@ -46,6 +46,7 @@ projectile ball[3] = {{4, 2, 3, 1, true}};
 point paddle = {3, 0};
 int level;
 boolean moved;
+boolean oneup;
 int timer;
 
 
@@ -53,6 +54,7 @@ void setup()
 {
   MeggyJrSimpleSetup(); 
   Serial.begin(9600);
+  EditColor(White, 13, 4, 3);
   EditColor(CustomColor0, 15, 0, 0);
   EditColor(CustomColor1, 10, 0, 10);
   EditColor(CustomColor2, 10, 0, 10);
@@ -100,6 +102,7 @@ void reset()
   paddle.x = 3;
   paddle.y = 0;
   moved = false;
+  oneup = false;
   timer = 0;
   switch (level)
   {
@@ -165,8 +168,14 @@ void UpdatePowerups()
     if (ReadPx(paddle.x + v, paddle.y) == CustomColor2)
       switch (random(4))
       {
-        default:
+        case 0:
           MultiBall();
+          break;
+        case 1:
+          InstaLaser();
+          break;
+        default:
+          OneUp();
       }  
 }
 
@@ -402,7 +411,31 @@ void MultiBall()
 }
 
 
+void InstaLaser()
+{
+  DrawObjects();
+  
+  for (int h = 0; h < 8; h++)
+  {
+    DrawPx(paddle.x, h, FullOn);
+    DisplaySlate();
+    delay(20);
+  }
+  
+  for (int h = 0; h < 8; h++)
+  {
+    DrawPx(paddle.x, h, Dark);
+    DisplaySlate();
+    delay(20);
+  }
+}
 
+
+void OneUp()
+{
+  EditColor(White, 15, 12, 4);
+  oneup = true;
+}
 
 
 boolean YouHaveWon()
@@ -450,19 +483,31 @@ void RunVictory()
 
 void GameOver()
 {
-  DisplaySlate();
-  delay(200);
-  for(int i=0;i<8;i++)
-    for(int j=0;j<8;j++)
-      DrawPx(i,j,CustomColor0);
-  DisplaySlate();
-  Tone_Start(ToneB2,400);
-  delay(500);
-  Tone_Start(ToneB2,400);
-  delay(500);
-  Tone_Start(ToneB2,500);
-  delay(500);
-  reset();
+  if (oneup)
+  {
+    oneup = false;
+    EditColor(White, 13, 4, 3);
+    ball[0].inplay = true;
+    ball[0].yvelocity = 1;
+    ball[0].x = 3;
+    ball[0].y = 2;
+  }
+  else
+  {
+    DisplaySlate();
+    delay(200);
+    for(int i=0;i<8;i++)
+      for(int j=0;j<8;j++)
+        DrawPx(i, j, CustomColor0);
+    DisplaySlate();
+    Tone_Start(ToneB2,400);
+    delay(500);
+    Tone_Start(ToneB2,400);
+    delay(500);
+    Tone_Start(ToneB2,500);
+    delay(500);
+    reset();
+  }
 }
 
 
