@@ -277,11 +277,15 @@ void BounceY(int index)
   if (ball[index].yvelocity > 0)
   {
     if (ball[index].y > 6)
+    {
       ball[index].yvelocity = -1;
+      Tone_Start(ToneB4, 50);
+    }
     if (ReadPx(ball[index].x, ball[index].y+1) > 0)
     {
       ball[index].yvelocity = -1;
       DrawPx(ball[index].x, ball[index].y+1, ReadPx(ball[index].x, ball[index].y+1) - 1);
+      Tone_Start(ToneB3, 50);
     }
   }
   if (ball[index].yvelocity < 0)
@@ -290,6 +294,7 @@ void BounceY(int index)
     {
       ball[index].yvelocity = 1;
       DrawPx(ball[index].x, ball[index].y-1, ReadPx(ball[index].x, ball[index].y-1) - 1);
+      Tone_Start(ToneB3, 50);
     }
     if (ball[index].y < 2)
       SlopeChange(index);
@@ -304,21 +309,29 @@ void BounceX(int index)
   if (ball[index].slope > 0)
   {
     if (ball[index].x > 6)
+    {
       ball[index].slope = -ball[index].slope;
+      Tone_Start(ToneB4, 50);
+    }
     if (ReadPx(ball[index].x+1, ball[index].y) > 0)
     {
       ball[index].slope = -ball[index].slope;
       DrawPx(ball[index].x+1, ball[index].y, ReadPx(ball[index].x+1, ball[index].y) - 1);
+      Tone_Start(ToneB3, 50);
     }
   }
   if (ball[index].slope < 0)
   {
     if (ball[index].x < 1)
+    {
       ball[index].slope = abs(ball[index].slope);
+      Tone_Start(ToneB4, 50);
+    }
     if (ReadPx(ball[index].x-1, ball[index].y) > 0)
     {
       ball[index].slope = abs(ball[index].slope);
       DrawPx(ball[index].x-1, ball[index].y, ReadPx(ball[index].x-1, ball[index].y) - 1);
+      Tone_Start(ToneB3, 50);
     }
   }
 }
@@ -332,6 +345,7 @@ void BounceDiagonal(int index)
       ball[index].slope = -ball[index].slope;
       ball[index].yvelocity = -1;
       DrawPx(ball[index].x+1, ball[index].y+1, ReadPx(ball[index].x+1, ball[index].y+1)-1);
+      Tone_Start(ToneB3, 50);
     }
   
   if (ball[index].slope > 0 && ball[index].yvelocity < 0)
@@ -340,6 +354,7 @@ void BounceDiagonal(int index)
       ball[index].slope = -ball[0].slope;
       ball[index].yvelocity = 1;
       DrawPx(ball[index].x+1, ball[index].y-1, ReadPx(ball[index].x+1, ball[index].y-1)-1);
+      Tone_Start(ToneB3, 50);
     }
   
   if (ball[index].slope < 0 && ball[index].yvelocity > 0)
@@ -348,6 +363,7 @@ void BounceDiagonal(int index)
       ball[index].slope = abs(ball[index].slope);
       ball[index].yvelocity = -1;
       DrawPx(ball[index].x-1, ball[index].y+1, ReadPx(ball[index].x-1, ball[index].y+1)-1);
+      Tone_Start(ToneB3, 50);
     }
   
   if (ball[index].slope < 0 && ball[index].yvelocity < 0)
@@ -356,6 +372,7 @@ void BounceDiagonal(int index)
       ball[index].slope = abs(ball[index].slope);
       ball[index].yvelocity = 1;
       DrawPx(ball[index].x-1, ball[index].y-1, ReadPx(ball[index].x-1, ball[index].y-1)-1);
+      Tone_Start(ToneB3, 50);
     }
 }
   
@@ -369,24 +386,29 @@ void SlopeChange(int ballindex)
       {
         ball[ballindex].yvelocity = 1;
         ball[ballindex].slope += 2;
+        Tone_Start(ToneB4, 50);
       }
       break;
     case -1:
       ball[ballindex].yvelocity = 1;
       ball[ballindex].slope++;
+      Tone_Start(ToneB4, 50);
       break;
     case 0:
       ball[ballindex].yvelocity = 1;
+      Tone_Start(ToneB4, 50);
       break;
     case 1:
       ball[ballindex].yvelocity = 1;
       ball[ballindex].slope--;
+      Tone_Start(ToneB4, 50);
       break;
     case 2:
       if (ball[ballindex].slope > 1)
       {
         ball[ballindex].yvelocity = 1;
         ball[ballindex].slope -= 2;
+        Tone_Start(ToneB4, 50);
       }
   }
 }
