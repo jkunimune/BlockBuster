@@ -46,8 +46,10 @@ projectile ball[3] = {{4, 2, 3, 1, true}};
 point paddle = {3, 0};
 int level;
 boolean moved;
+boolean started;
 boolean oneup;
 int onfire;
+int waittime;
 int timer;
 
 
@@ -66,7 +68,7 @@ void setup()
 
 
 void loop() 
-{
+{ 
   EraseObjects();
   
   UpdateBall();
@@ -77,7 +79,10 @@ void loop()
   
   DrawObjects();
   
-  delay(10);
+  delay(waittime);
+  
+  if (Button_A || Button_B || Button_Up)
+    started = true;
   
   if (YouHaveWon())
     RunVictory();
@@ -93,9 +98,9 @@ void reset()
   ClearSlate();
   for (int i = 0; i < 3; i++)
   {
-    ball[i].x = random(6)+1;
-    ball[i].y = 2;
-    ball[i].slope = 2;
+    ball[i].x = 3;
+    ball[i].y = 1;
+    ball[i].slope = random(2)*4-2;
     ball[i].yvelocity = 1;
     ball[i].inplay = false;
   }
@@ -103,8 +108,10 @@ void reset()
   paddle.x = 3;
   paddle.y = 0;
   moved = false;
+  started = false;
   oneup = false;
   onfire = 0;
+  waittime = 10;
   EditColor(White, 13, 4, 3);
   timer = 0;
   switch (level)
@@ -147,6 +154,8 @@ void DrawObjects()
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Blue);
   DisplaySlate();
+  
+  SetAuxLEDs(pow(2, level) - 1);
 }
 
 
@@ -169,7 +178,7 @@ void UpdatePowerups()
   }
   for (int v = -1; v < 2; v++)
     if (ReadPx(paddle.x + v, paddle.y) == CustomColor2)
-      switch (random(4))
+      switch (random(5))
       {
         case 0:
           MultiBall();
@@ -180,51 +189,60 @@ void UpdatePowerups()
         case 2:
           OneUp();
           break;
-        default:
+        case 3:
           Fireball();
+          break;
+        default:
+          waittime = 5;
       }  
 }
 
 
 void UpdateBall()
 {
-  for (int n = 0; n < 3; n++)
-    if (ball[n].inplay)
-    {
-      if(timer % (60/ball[n].slope) == 0)
-        BounceX(n);
-    
-      if (timer % 30 == 0)
-        BounceY(n);
-    
-      if (timer % (60/ball[n].slope) == 0 && timer % 30 == 0)
-        BounceDiagonal(n);
-  
-      if(timer % (60/ball[n].slope) == 0)
+  if (started)
+  {
+    for (int n = 0; n < 3; n++)
+      if (ball[n].inplay)
       {
-        if (ball[n].slope > 0)
-          ball[n].x++;
-        if (ball[n].slope < 0)
-          ball[n].x--;
-      }
+        if(timer % (60/ball[n].slope) == 0)
+          BounceX(n);
+    
+        if (timer % 30 == 0)
+          BounceY(n);
+    
+        if (timer % (60/ball[n].slope) == 0 && timer % 30 == 0)
+          BounceDiagonal(n);
+  
+        if(timer % (60/ball[n].slope) == 0)
+        {
+          if (ball[n].slope > 0)
+            ball[n].x++;
+          if (ball[n].slope < 0)
+            ball[n].x--;
+        }
 
-      if (timer % 30 == 0)
-      {
-        ball[n].y += ball[n].yvelocity;
+        if (timer % 30 == 0)
+        {
+          ball[n].y += ball[n].yvelocity;
+        }
+  
+        StopTeleport(n);
       }
-  
-      StopTeleport(n);
-    }
     
-    if (onfire > 0)
-      onfire--;
-    else if (oneup)
-      EditColor(White, 15, 12, 4);
-    else
-      EditColor(White, 13, 4, 3);
+      if (onfire > 0)
+        onfire--;
+      else if (oneup)
+        EditColor(White, 15, 12, 4);
+      else
+        EditColor(White, 13, 4, 3);
   
-  if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
-    GameOver();
+    if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
+      GameOver();
+  }
+  
+  else
+    ball[0].x = paddle.x;
 }
 
 
@@ -292,27 +310,28 @@ void BounceY(int index)
     if (ball[index].y > 6)
     {
       ball[index].yvelocity = -1;
-      //Tone_Start(ToneB4, 50);
+      Tone_Start(ToneB4, 50);
     }
+    
     if (ReadPx(ball[index].x, ball[index].y+1) > 0 && onfire == 0)
     {
       ball[index].yvelocity = -1;
       DrawPx(ball[index].x, ball[index].y+1, ReadPx(ball[index].x, ball[index].y+1) - 1);
-      //Tone_Start(ToneB3, 50);
+      Tone_Start(ToneB3, 50);
     }
   }
+  
   if (ball[index].yvelocity < 0)
   {
     if (ReadPx(ball[index].x, ball[index].y-1) > 0 && onfire == 0)
     {
       ball[index].yvelocity = 1;
       DrawPx(ball[index].x, ball[index].y-1, ReadPx(ball[index].x, ball[index].y-1) - 1);
-      //Tone_Start(ToneB3, 50);
+      Tone_Start(ToneB3, 50);
     }
+    
     if (ball[index].y < 2)
-    {
       SlopeChange(index);
-    }
   }
   if (ball[index].y < 1)
     ball[index].inplay = false;
@@ -328,6 +347,7 @@ void BounceX(int index)
       ball[index].slope = -ball[index].slope;
       Tone_Start(ToneB4, 50);
     }
+    
     if (ReadPx(ball[index].x+1, ball[index].y) > 0 && onfire == 0)
     {
       ball[index].slope = -ball[index].slope;
@@ -335,19 +355,21 @@ void BounceX(int index)
       Tone_Start(ToneB3, 50);
     }
   }
+  
   if (ball[index].slope < 0)
   {
     if (ball[index].x < 1)
-    {
       ball[index].slope = abs(ball[index].slope);
-      Tone_Start(ToneB4, 50);
-    }
+      
     if (ReadPx(ball[index].x-1, ball[index].y) > 0 && onfire == 0)
     {
       ball[index].slope = abs(ball[index].slope);
       DrawPx(ball[index].x-1, ball[index].y, ReadPx(ball[index].x-1, ball[index].y) - 1);
       Tone_Start(ToneB3, 50);
     }
+    
+    if (ball[index].x < 1)
+      Tone_Start(ToneB4, 50);
   }
 }
 
@@ -397,7 +419,7 @@ void SlopeChange(int ballindex)
   switch (paddle.x - ball[ballindex].x)
   {
     case -2:
-      if (ball[ballindex].slope < 1)
+      if (ball[ballindex].slope < 0)
       {
         ball[ballindex].yvelocity = 1;
         ball[ballindex].slope += 2;
@@ -419,7 +441,7 @@ void SlopeChange(int ballindex)
       Tone_Start(ToneB4, 50);
       break;
     case 2:
-      if (ball[ballindex].slope > 1)
+      if (ball[ballindex].slope > 0)
       {
         ball[ballindex].yvelocity = 1;
         ball[ballindex].slope -= 2;
