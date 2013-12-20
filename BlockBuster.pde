@@ -676,6 +676,7 @@ void Level5()
     for(int j=0;j<8;j++)
       DrawPx(i,j,Green);
   DisplaySlate();
+  delay(600);
   Tone_Start(ToneC5,150);
   delay(150);
   Tone_Start(ToneE5,150);
@@ -708,8 +709,8 @@ void Level5()
 void ShowNumeral(int column, int digit)
 {
   int color;
-  if (failures < 65)
-    color = 4 - failures/15;
+  if (failures < 20)
+    color = 4 - failures/5;
   else
     color = 1;
     
