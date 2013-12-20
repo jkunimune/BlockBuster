@@ -53,6 +53,7 @@ int onfire;
 int waittime;
 int LED;
 int timer;
+int failures;
 
 
 void setup()
@@ -65,6 +66,7 @@ void setup()
   EditColor(CustomColor2, 10, 0, 10);
   EditColor(CustomColor3, 10, 0, 10);
   level = 1;
+  failures = 0;
   difficulty = 1;
   reset();
 }
@@ -101,8 +103,8 @@ void loop()
 
 void reset()
 {
-  Serial.print("Now executing reset for level ");
-  Serial.println(level);
+  Serial.print("Failures:");
+  Serial.println(failures);
   ClearSlate();
   for (int i = 0; i < 3; i++)
   {
@@ -126,19 +128,15 @@ void reset()
   {
     case 1:
       Level1();
-      Serial.println("Initiating level 1");
       break;
     case 2:
       Level2();
-      Serial.println("Initiating level 2");
       break;
     case 3:
       Level3();
-      Serial.println("Initiating level 3");
       break;
     case 4:
       Level4();
-      Serial.println("Initiating level 4");
       break;
   }
   DrawPx(random(8), random(5)+3, CustomColor3);
@@ -563,9 +561,6 @@ boolean YouHaveWon()
 
 void RunVictory()
 {
-  Serial.print("You beat level ");
-  Serial.print(level);
-  Serial.println("!");
   for(int i=0;i<8;i++)
     for(int j=0;j<8;j++)
       DrawPx(i,j,Green);
@@ -576,12 +571,8 @@ void RunVictory()
   delay(150);
   Tone_Start(ToneC6,150);
   delay(150);
-  Serial.print("Incrementing to level ");
-  Serial.println(level + 1);
   level++;
   difficulty++;
-  Serial.print("You are now on level ");
-  Serial.println(level);
   reset();
 }
 
@@ -599,6 +590,7 @@ void GameOver()
   }
   else
   {
+    failures++;
     DisplaySlate();
     delay(200);
     for(int i=0;i<8;i++)
