@@ -65,8 +65,8 @@ void setup()
   EditColor(CustomColor1, 10, 0, 10);
   EditColor(CustomColor2, 10, 0, 10);
   EditColor(CustomColor3, 10, 0, 10);
-  level = 1;
   failures = 0;
+  level = 1;
   difficulty = 1;
   reset();
 }
@@ -138,6 +138,8 @@ void reset()
     case 4:
       Level4();
       break;
+    case 5:
+      Level5();
   }
   DrawPx(random(8), random(5)+3, CustomColor3);
 }
@@ -509,6 +511,7 @@ void InstaLaser()
 {
   DrawObjects();
   
+  Tone_Start(ToneG6, 200);
   for (int h = 0; h < 8; h++)
   {
     DrawPx(paddle.x, h, FullOn);
@@ -516,12 +519,15 @@ void InstaLaser()
     delay(20);
   }
   
+  Tone_Start(ToneF6, 200);
   for (int h = 0; h < 8; h++)
   {
     DrawPx(paddle.x, h, Dark);
     DisplaySlate();
     delay(20);
   }
+  
+  Tone_Start(ToneE6, 200);
 }
 
 
@@ -529,6 +535,15 @@ void OneUp()
 {
   EditColor(White, 15, 12, 4);
   oneup = true;
+  Tone_Start(ToneC6,150);
+  delay(50);
+  Tone_Start(ToneE6,150);
+  delay(50);
+  Tone_Start(ToneC6,150);
+  delay(50);
+  Tone_Start(ToneE6,150);
+  delay(50);
+  Tone_Start(ToneG6,100);
 }
 
 
@@ -652,4 +667,153 @@ void Level4()
        DrawPx(i, k, Red);
   DrawPx(2, 4, Dark);
   DrawPx(5, 4, Dark);
+}
+
+
+void Level5()
+{
+  for(int i=0;i<8;i++)
+    for(int j=0;j<8;j++)
+      DrawPx(i,j,Green);
+  DisplaySlate();
+  Tone_Start(ToneC5,150);
+  delay(150);
+  Tone_Start(ToneE5,150);
+  delay(150);
+  Tone_Start(ToneG5,150);
+  delay(150);
+  Tone_Start(ToneF5,150);
+  delay(150);
+  Tone_Start(ToneA5,150);
+  delay(150);
+  Tone_Start(ToneC6,150);
+  delay(150);
+  Tone_Start(ToneG5,150);
+  delay(150);
+  Tone_Start(ToneB5,150);
+  delay(150);
+  Tone_Start(ToneD6,150);
+  delay(150);
+  Tone_Start(ToneC6,300);
+  delay(600);
+  ClearSlate();
+  ShowNumeral(0, (failures - failures%10) /10);
+  ShowNumeral(4, failures%10);
+  while (0 != 1)
+  {
+  }
+}
+
+
+void ShowNumeral(int column, int digit)
+{
+  int color;
+  if (failures < 65)
+    color = 4 - failures/15;
+  else
+    color = 1;
+    
+  switch(digit)
+  {
+    case 0:
+      for(int q = 0; q < 4; q += 3)
+        for(int w = 1; w < 6; w++)
+          DrawPx(q + column, w, color);
+      for(int q = 0; q < 8; q += 6)
+        for(int w = 1; w < 3; w++)
+          DrawPx(w + column, q, color);
+      break;
+      
+    case 1:
+      for (int w = 0; w < 7; w++)
+        DrawPx(2 + column, w, color);
+      break;
+      
+    case 2:
+      for (int w = 0; w < 4; w++)
+        DrawPx(w + column, 0, color);
+      DrawPx(column, 1, color);
+      DrawPx(column, 2, color);
+      DrawPx(column + 1, 3, color);
+      DrawPx(column + 2, 3, color);
+      DrawPx(column + 3, 4, color);
+      DrawPx(column + 3, 5, color);
+      DrawPx(column + 1, 6, color);
+      DrawPx(column + 2, 6, color);
+      DrawPx(column, 5, color);
+      break;
+      
+    case 3:
+      for (int w = 1; w < 6; w++)
+        DrawPx(column + 3, w, color);
+      DrawPx(column + 3, 3, Dark);
+      for (int q = 1; q < 3; q++)
+        for (int w = 0; w < 7; w += 3)
+          DrawPx(q + column, w, color);
+      DrawPx(column, 1, color);
+      DrawPx(column, 5, color);
+      break;
+      
+    case 4:
+      for (int w = 0; w < 7; w++)
+        DrawPx(column + 3, w, color);
+      for (int w = 0; w < 4; w++)
+        DrawPx(column + w, 3, color);
+      for (int w = 3; w < 7; w++)
+        DrawPx(column, w, color);
+      break;
+      
+    case 5:
+      for (int q = 1; q < 3; q++)
+        for (int w = 0; w < 7; w += 3)
+          DrawPx(column + q, w, color);
+      for (int w = 1; w < 7; w++)
+        DrawPx(column, w, color);
+      DrawPx(column, 2, Dark);
+      DrawPx(column + 3, 1, color);
+      DrawPx(column + 3, 2, color);
+      DrawPx(column + 3, 6, color);
+      break;
+      
+    case 6:
+      for (int w = 1; w < 6; w++)
+        DrawPx(column, w, color);
+      for (int q = 1; q < 3; q++)
+        for (int w = 0; w < 7; w += 3)
+          DrawPx(column + q, w, color);
+      DrawPx(column + 3, 1, color);
+      DrawPx(column + 3, 2, color);
+      DrawPx(column + 3, 5, color);
+      break;
+      
+    case 7:
+      for (int w = 0; w < 4; w++)
+        DrawPx(column + w, 6, color);
+      for (int q = 0; q < 2; q++)
+        for (int w = 0; w < 3; w++)
+          DrawPx(column + 1 + w, 2*w + q, color);
+      break;
+      
+    case 8:
+      for (int q = 0; q < 4; q += 3)
+        for (int w = 1; w < 6; w++)
+          DrawPx(column + q, w, color);
+      for (int q = 1; q < 3; q++)
+        for (int w = 0; w < 7; w += 3)
+          DrawPx(column + q, w, color);
+      DrawPx(column, 3, Dark);
+      DrawPx(column + 3, 3, Dark);
+      break;
+      
+    case 9:
+      for (int w = 1; w < 6; w++)
+        DrawPx(column + 3, w, color);
+      for (int q = 1; q < 3; q++)
+        for (int w = 0; w < 7; w += 3)
+          DrawPx(column + q, w, color);
+      DrawPx(column, 1, color);
+      DrawPx(column, 4, color);
+      DrawPx(column, 5, color);
+  }
+  DisplaySlate();
 }
