@@ -45,15 +45,17 @@ struct projectile {int x; int y; int slope; int yvelocity; boolean inplay;};
 projectile ball[3] = {{4, 2, 3, 1, true}};
 point paddle = {3, 0};
 int level;
+int difficulty;
 boolean moved;
 boolean started;
 boolean oneup;
 int onfire;
 int waittime;
+int LED;
 int timer;
 
 
-void setup() 
+void setup()
 {
   MeggyJrSimpleSetup(); 
   Serial.begin(9600);
@@ -63,6 +65,7 @@ void setup()
   EditColor(CustomColor2, 10, 0, 10);
   EditColor(CustomColor3, 10, 0, 10);
   level = 1;
+  difficulty = 1;
   reset();
 }
 
@@ -81,8 +84,13 @@ void loop()
   
   delay(waittime);
   
-  if (Button_A || Button_B || Button_Up)
+  if (Button_A || Button_B)
     started = true;
+    
+  while (Button_Down)
+  {
+    CheckButtonsDown();
+  }
   
   if (YouHaveWon())
     RunVictory();
@@ -111,10 +119,10 @@ void reset()
   started = false;
   oneup = false;
   onfire = 0;
-  waittime = 10;
+  waittime = 8;
   EditColor(White, 13, 4, 3);
   timer = 0;
-  switch (level)
+  switch (difficulty)
   {
     case 1:
       Level1();
@@ -133,6 +141,7 @@ void reset()
       Serial.println("Initiating level 4");
       break;
   }
+  DrawPx(random(8), random(5)+3, CustomColor3);
 }
 
 
@@ -141,6 +150,9 @@ void EraseObjects()
   for (int v = 0; v < 3; v++)
     if (ball[v].inplay)
       DrawPx(ball[v].x, ball[v].y, Dark);
+      
+    DrawPx(paddle.x, 0, Dark);
+  
   for(int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Dark);
 }
@@ -148,23 +160,34 @@ void EraseObjects()
 
 void DrawObjects()
 {
+  for (int j = -1; j < 2; j++)
+    DrawPx(paddle.x + j, paddle.y, Blue);
+  
+  DrawPx(paddle.x, 0, Blue);
+    
   for (int u = 0; u < 3; u++)
     if (ball[u].inplay)
       DrawPx(ball[u].x, ball[u].y, White);
-  for(int j = -1; j < 2; j++)
-    DrawPx(paddle.x + j, paddle.y, Blue);
+      
   DisplaySlate();
   
-  SetAuxLEDs(pow(2, level) - 1);
+  LED = 0;
+  for(int e = 0; e < difficulty; e++)
+    LED = 2*LED + 1;
+  SetAuxLEDs(LED);
 }
 
 
 void UpdatePowerups()
 {
-  if (timer % 20 == 0)
+  if (timer % 40 == 0)
   {
     for(int b = 0; b < 8; b++)
-      for(int c = 0; c < 8; c++)
+      if(ReadPx(b, 0) == CustomColor2)
+        DrawPx(b, 0, Dark);
+    
+    for(int b = 0; b < 8; b++)
+      for(int c = 1; c < 8; c++)
         if(ReadPx(b, c) == CustomColor2)
         {
           DrawPx(b, c, Dark);
@@ -193,7 +216,7 @@ void UpdatePowerups()
           Fireball();
           break;
         default:
-          waittime = 5;
+          waittime = 4;
       }  
 }
 
@@ -242,7 +265,10 @@ void UpdateBall()
   }
   
   else
+  {
     ball[0].x = paddle.x;
+    ball[0].y = paddle.y + 1;
+  }
 }
 
 
@@ -265,6 +291,13 @@ void UpdatePaddle()
   
   if (timer % 20 == 0)
     MoveHold();
+  
+  CheckButtonsDown();
+    
+  if(Button_Up)
+    paddle.y = 1;
+  else
+    paddle.y = 0;
 }
 
 
@@ -288,10 +321,10 @@ void MovePress()
 
 void MoveHold()
 {
+  CheckButtonsDown();
+  
   if (!moved)
   {
-    CheckButtonsDown();
-  
     if (Button_Right && paddle.x < 6)
       paddle.x++;
   
@@ -330,7 +363,7 @@ void BounceY(int index)
       Tone_Start(ToneB3, 50);
     }
     
-    if (ball[index].y < 2)
+    if (ball[index].y < paddle.y + 2)
       SlopeChange(index);
   }
   if (ball[index].y < 1)
@@ -542,6 +575,7 @@ void RunVictory()
   Serial.print("Incrementing to level ");
   Serial.println(level + 1);
   level++;
+  difficulty++;
   Serial.print("You are now on level ");
   Serial.println(level);
   reset();
@@ -583,7 +617,6 @@ void Level1()
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
        DrawPx(i, k, Red);
-  DrawPx(3, 6, CustomColor3);
 }
 
 
@@ -621,4 +654,6 @@ void Level4()
   for (int i = 5; i < 8; i++)
     for (int k = 3; k < 5; k++)
        DrawPx(i, k, Red);
+  DrawPx(2, 4, Dark);
+  DrawPx(5, 4, Dark);
 }
