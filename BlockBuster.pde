@@ -103,8 +103,6 @@ void loop()
 
 void reset()
 {
-  Serial.print("Failures:");
-  Serial.println(failures);
   ClearSlate();
   for (int i = 0; i < 3; i++)
   {
@@ -216,7 +214,7 @@ void UpdatePowerups()
           Fireball();
           break;
         default:
-          waittime = 4;
+          Accelerate();
       }  
 }
 
@@ -504,6 +502,12 @@ void MultiBall()
       ball[(g+2)%3].yvelocity = -ball[g].yvelocity;
       ball[(g+2)%3].inplay = true;
     }
+    
+  Tone_Start(ToneB5,300);
+  delay(50);
+  Tone_Start(ToneB4,300);
+  delay(50);
+  Tone_Start(ToneB5,50);  
 }
 
 
@@ -511,23 +515,23 @@ void InstaLaser()
 {
   DrawObjects();
   
-  Tone_Start(ToneG6, 200);
+  Tone_Start(ToneD7, 200);
   for (int h = 0; h < 8; h++)
   {
     DrawPx(paddle.x, h, FullOn);
     DisplaySlate();
-    delay(20);
+    delay(15);
   }
   
-  Tone_Start(ToneF6, 200);
+  Tone_Start(ToneD6, 200);
   for (int h = 0; h < 8; h++)
   {
     DrawPx(paddle.x, h, Dark);
     DisplaySlate();
-    delay(20);
+    delay(15);
   }
   
-  Tone_Start(ToneE6, 200);
+  Tone_Start(ToneB5, 200);
 }
 
 
@@ -536,14 +540,14 @@ void OneUp()
   EditColor(White, 15, 12, 4);
   oneup = true;
   Tone_Start(ToneC6,150);
-  delay(50);
+  delay(100);
   Tone_Start(ToneE6,150);
-  delay(50);
+  delay(100);
   Tone_Start(ToneC6,150);
-  delay(50);
+  delay(100);
   Tone_Start(ToneE6,150);
-  delay(50);
-  Tone_Start(ToneG6,100);
+  delay(100);
+  Tone_Start(ToneG6,200);
 }
 
 
@@ -551,7 +555,24 @@ void Fireball()
 {
   EditColor(White, 25, 1, 0);
   onfire = 1000;
-  Serial.println("You are now on fire.");
+  Tone_Start(ToneF5,200);
+  delay(100);
+  Tone_Start(ToneE5,200);
+  delay(100);
+  Tone_Start(ToneC5,200);
+  delay(100);
+  Tone_Start(ToneD5,100);
+}
+
+
+void Accelerate()
+{
+  waittime = 4;
+  Tone_Start(ToneC5,300);
+  delay(100);
+  Tone_Start(ToneCs5,300);
+  delay(100);
+  Tone_Start(ToneD5,200);
 }
 
 
