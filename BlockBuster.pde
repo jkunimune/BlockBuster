@@ -84,7 +84,7 @@ void loop()
   
   delay(waittime);
   
-  if (Button_A || Button_B)
+  if (Button_A || Button_B || Button_Up)
     started = true;
     
   while (Button_Down)
@@ -251,14 +251,18 @@ void UpdateBall()
         }
   
         StopTeleport(n);
+        
+        if (ball[n].x - paddle.x < 2 && ball[n].x - paddle.x > -2)
+          if (ball[n].y == paddle.y)
+            ball[n].y++;
       }
     
-      if (onfire > 0)
-        onfire--;
-      else if (oneup)
-        EditColor(White, 15, 12, 4);
-      else
-        EditColor(White, 13, 4, 3);
+    if (onfire > 0)
+      onfire--;
+    else if (oneup)
+      EditColor(White, 15, 12, 4);
+    else
+      EditColor(White, 13, 4, 3);
   
     if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
       GameOver();
@@ -294,7 +298,7 @@ void UpdatePaddle()
   
   CheckButtonsDown();
     
-  if(Button_Up)
+  if (Button_Up)
     paddle.y = 1;
   else
     paddle.y = 0;
