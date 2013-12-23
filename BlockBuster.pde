@@ -62,9 +62,10 @@ void setup()
   Serial.begin(9600);
   EditColor(White, 13, 4, 3);
   EditColor(CustomColor0, 15, 0, 0);
-  EditColor(CustomColor1, 10, 0, 10);
-  EditColor(CustomColor2, 10, 0, 10);
-  EditColor(CustomColor3, 10, 0, 10);
+  EditColor(CustomColor1, 14, 0, 15);
+  EditColor(CustomColor2, 14, 0, 15);
+  EditColor(CustomColor3, 14, 0, 15);
+  EditColor(CustomColor4, 10, 0, 10);
   failures = 0;
   level = 1;
   difficulty = 1;
@@ -139,7 +140,7 @@ void reset()
     case 5:
       Level5();
   }
-  DrawPx(random(8), random(5)+3, CustomColor3);
+  DrawPx(random(8), random(5)+3, CustomColor4);
 }
 
 
@@ -178,6 +179,14 @@ void DrawObjects()
 
 void UpdatePowerups()
 {
+  for(int b = 0; b < 8; b++)
+    for(int c = 0; c < 8; c++)
+      if(ReadPx(b, c) == CustomColor3)
+      {
+        DrawPx(b, c, CustomColor2);
+        Tone_Start(ToneB5, 50);
+      }
+      
   if (timer % 40 == 0)
   {
     for(int b = 0; b < 8; b++)
@@ -186,7 +195,7 @@ void UpdatePowerups()
     
     for(int b = 0; b < 8; b++)
       for(int c = 1; c < 8; c++)
-        if(ReadPx(b, c) == CustomColor2)
+        if(ReadPx(b, c) == CustomColor2 && ReadPx(b, c - 1) == 0)
         {
           DrawPx(b, c, Dark);
           DrawPx(b, c - 1, CustomColor2);
@@ -383,12 +392,18 @@ void BounceX(int index)
       Tone_Start(ToneB4, 50);
     }
     
+    if (ball[index].x == paddle.x - 2 && ball[index].y == paddle.y)
+    {
+      ball[index].slope = -ball[index].slope;
+      Tone_Start(ToneB4, 50);
+    }
+    
     if (ReadPx(ball[index].x+1, ball[index].y) > 0 && onfire == 0)
     {
       ball[index].slope = -ball[index].slope;
       DrawPx(ball[index].x+1, ball[index].y, ReadPx(ball[index].x+1, ball[index].y) - 1);
       Tone_Start(ToneB3, 50);
-    }
+    }  
   }
   
   if (ball[index].slope < 0)
@@ -405,6 +420,12 @@ void BounceX(int index)
     
     if (ball[index].x < 1)
       Tone_Start(ToneB4, 50);
+      
+    if (ball[index].x == paddle.x + 2 && ball[index].y == paddle.y)
+    {
+      ball[index].slope = abs(ball[index].slope);
+      Tone_Start(ToneB4, 50);
+    }
   }
 }
 
@@ -516,7 +537,7 @@ void InstaLaser()
   DrawObjects();
   
   Tone_Start(ToneD7, 200);
-  for (int h = 0; h < 8; h++)
+  for (int h = 1; h < 8; h++)
   {
     DrawPx(paddle.x, h, FullOn);
     DisplaySlate();
@@ -524,7 +545,7 @@ void InstaLaser()
   }
   
   Tone_Start(ToneD6, 200);
-  for (int h = 0; h < 8; h++)
+  for (int h = 1; h < 8; h++)
   {
     DrawPx(paddle.x, h, Dark);
     DisplaySlate();
@@ -554,7 +575,7 @@ void OneUp()
 void Fireball()
 {
   EditColor(White, 25, 1, 0);
-  onfire = 1000;
+  onfire = 2000;
   Tone_Start(ToneF5,200);
   delay(100);
   Tone_Start(ToneE5,200);
@@ -667,11 +688,13 @@ void Level3()
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
        DrawPx(i, k, Red);
-  for (int i = 1; i < 7; i+=5)
+  for (int i = 2; i < 6; i+=2)
     for (int k = 5; k < 8; k++)
        DrawPx(i, k, Orange);
-  for (int i = 1; i < 7; i++)
+  for (int i = 2; i < 6; i++)
     DrawPx(i, 4, Yellow);
+  DrawPx(3, 3, Yellow);
+  DrawPx(4, 3, Yellow);
 }
 
 
