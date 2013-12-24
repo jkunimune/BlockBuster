@@ -258,10 +258,17 @@ void UpdateBall()
         }
   
         StopTeleport(n);
-        
+          
+        if (ball[n].x == paddle.x - 2)
+          if (ball[n].y == 0 && paddle.y == 0)
+            ball[n].x--;
+            
+        if (ball[n].x == paddle.x + 2)
+          if (ball[n].y == 0 && paddle.y == 0)
+            ball[n].x++;
+            
         if (ball[n].x - paddle.x < 2 && ball[n].x - paddle.x > -2)
-          if (ball[n].y == paddle.y)
-            ball[n].y++;
+          ball[n].y++;
       }
     
     if (onfire > 0)
@@ -688,7 +695,7 @@ void Level3()
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
        DrawPx(i, k, Red);
-  for (int i = 2; i < 6; i+=2)
+  for (int i = 2; i < 6; i+=3)
     for (int k = 5; k < 8; k++)
        DrawPx(i, k, Orange);
   for (int i = 2; i < 6; i++)
@@ -711,6 +718,8 @@ void Level4()
        DrawPx(i, k, Red);
   DrawPx(2, 4, Dark);
   DrawPx(5, 4, Dark);
+  DrawPx(2, 6, Dark);
+  DrawPx(5, 6, Dark);
 }
 
 
@@ -744,7 +753,7 @@ void Level5()
   ClearSlate();
   ShowNumeral(0, (failures - failures%10) /10);
   ShowNumeral(4, failures%10);
-  while (0 != 1)
+  while (true)
   {
   }
 }
