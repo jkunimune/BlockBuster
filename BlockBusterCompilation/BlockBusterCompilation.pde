@@ -216,9 +216,9 @@ void Singleplayer()
   
     UpdateBall();
     
-    UpdatePowerups();
-    
     UpdatePaddle();
+    
+    UpdatePowerups();
     
     DrawObjects();
     
@@ -397,18 +397,27 @@ void UpdateBall()
         }
   
         StopTeleport(n);
-        
+          
         if (ball[n].x == paddle.x - 2)
           if (ball[n].y == 0 && paddle.y == 0)
+          {
             ball[n].x--;
+            ball[n].slope = -abs(ball[n].slope);
+          }
             
         if (ball[n].x == paddle.x + 2)
           if (ball[n].y == 0 && paddle.y == 0)
+          {
             ball[n].x++;
+            ball[n].slope = abs(ball[n].slope);
+          }
             
         if (ball[n].x - paddle.x < 2 && ball[n].x - paddle.x > -2)
           if (ball[n].y == paddle.y)
+          {
             ball[n].y++;
+            SlopeChange(n);
+          }
       }
     
     if (onfire > 0)
