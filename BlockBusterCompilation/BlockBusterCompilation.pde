@@ -37,32 +37,32 @@
 
 #include <MeggyJrSimple.h>
 
-int stopwatch;
-int frame;
+int stopwatch;    // seeds the random generator and controls animation
+int frame;      // decides what image will be displayed
 
 struct point {int x; int y;};
-struct projectile {int x; int y; int slope; int yvelocity; boolean inplay;};
-projectile ball[3] = {{4, 2, 3, 1, true}};
-point paddle = {3, 0};
-point paddleBlue = {3, 0};
+struct projectile {int x; int y; int slope; int yvelocity; boolean inplay;};  // remembers position + velocity
+projectile ball[3] = {{4, 2, 3, 1, true}};    // balls are projectiles
+point paddle = {3, 0};      // singleplayer paddle
+point paddleBlue = {3, 0};      // multiplayer paddles
 point paddleRed = {4, 7};
-int level;
-int difficulty;
-boolean moved;
-boolean blueMoved;
+int level;        // level and difficulty are identical, but there is a weird glitch
+int difficulty;   // that occurs when there is only one
+boolean moved;      // allows for motion by pressing or holding buttons
+boolean blueMoved;      // multiplayer versions
 boolean redMoved;
-boolean started;
-boolean oneup;
-int onfire;
-int waittime;
-int LED;
-int LED1;
+boolean started;      // determines whether the ball has been launched yet
+boolean oneup;      // keeps track of oneup powerups
+int onfire;      // keeps track of how long you will be on fire
+int waittime;      // controls speed
+int LED;      // handles the auxLEDs
+int LED1;      // combines the scores of red and blue to determine the multiplayer LED value
 int LED2;
-int timer;
-int failures;
-int redScore;
+int timer;      // controls the motion and updates of various elements
+int failures;      // counts the number of times you have died
+int redScore;       // keeps track of score
 int blueScore;
-int turn;
+int turn;      // allows the last person to lose a point to serve the next ball
 
 
 void setup()
@@ -70,8 +70,8 @@ void setup()
   MeggyJrSimpleSetup();
   Serial.begin(9600);
   
-  for (int j = 0; j < 2; j++)
-    for (int k = 4; k < 8; k++)
+  for (int j = 0; j < 2; j++)      // This all draws out the stationary parts of
+    for (int k = 4; k < 8; k++)    // the menu screen
       DrawPx(j, k, White);
   DrawPx(2, 5, White);
   DrawPx(2, 6, White);
@@ -91,31 +91,31 @@ void loop()
 {
   stopwatch++;
   if (stopwatch % 400 == 0)
-    frame++;
-  if (frame > 5)
+    frame++;        // There is 1/400 of a frame per milisecond, or 2.5 fps.
+  if (frame > 5)      // There are 5 frames total, or 2 seconds of animation.
     frame = 0;
   
   CheckButtonsDown();
   
-  if (Button_A)
+  if (Button_A)      // 'A' activates multiplayer mode (pong).
   {
     randomSeed(stopwatch);
     Multiplayer();
   }
-  if (Button_B)
+  if (Button_B)      // 'B' activates singleplayer mode (blockbuster).
   {
     randomSeed(stopwatch);
     Singleplayer();
   }
   
-  for (int j = 0; j < 8; j++)
+  for (int j = 0; j < 8; j++)      // erases the last frame
     for (int k = 0; k < 4; k++)
       DrawPx(j, k, Dark);
   DrawPx(0, 3, Red);
   DrawPx(1, 3, Orange);
   DrawPx(2, 3, Violet);
   DrawPx(3, 3, Red);
-  switch (frame)
+  switch (frame)                   // and then draws the next one
   {
     case 0:
       DrawPx(2, 1, White);
@@ -190,18 +190,18 @@ void loop()
   }
   DisplaySlate();
   
-  delay(1);
+  delay(1);      // a delay of 1 msec allows for more presice randomseeding
 }
 
 
-void Singleplayer()
+void Singleplayer()      // This is BlockBuster.
 {
-  EditColor(White, 13, 4, 3);
+  EditColor(White, 13, 4, 3);      // setup
   EditColor(CustomColor0, 15, 0, 0);
-  EditColor(CustomColor1, 14, 0, 15);
-  EditColor(CustomColor2, 14, 0, 15);
-  EditColor(CustomColor3, 14, 0, 15);
-  EditColor(CustomColor4, 10, 0, 10);
+  EditColor(CustomColor1, 15, 0, 15);
+  EditColor(CustomColor2, 15, 0, 15);
+  EditColor(CustomColor3, 15, 0, 15);
+  EditColor(CustomColor4, 8, 0, 8);
   failures = 0;
   level = 1;
   difficulty = 1;
@@ -212,27 +212,27 @@ void Singleplayer()
   
   while (true)
   {
-    EraseObjects();
+    EraseObjects();      // erase the paddle and ball
   
-    UpdateBall();
+    UpdateBall();      // move the ball along trajectory
     
-    UpdatePaddle();
+    UpdatePaddle();      // move the paddle
     
-    UpdatePowerups();
+    UpdatePowerups();      // drop powerups
     
-    DrawObjects();
+    DrawObjects();      // redraw the paddle and ball in their new positions
     
     delay(waittime);
     
-    if (Button_A || Button_B || Button_Up)
+    if (Button_A || Button_B || Button_Up)      // launch the ball if necessary
       started = true;
       
-    while (Button_Down)
+    while (Button_Down)      // down pauses the game
     {
       CheckButtonsDown();
     }
     
-    if (YouHaveWon())
+    if (YouHaveWon())      // check for victory
       RunVictory();
     
     timer++;
@@ -240,16 +240,16 @@ void Singleplayer()
 }
 
 
-void reset()
+void reset()      // resets variables, clears slate, and initiates next level
 {
   ClearSlate();
-  for (int i = 0; i < 3; i++)
-  {
-    ball[i].x = 3;
+  for (int i = 0; i < 3; i++)      // I use different letters for all of my
+  {                                // loop variables to prevent conflicts
+    ball[i].x = 3;      // the balls are an array for when the player gets multiball
     ball[i].y = 1;
-    ball[i].slope = random(2)*4-2;
-    ball[i].yvelocity = 1;
-    ball[i].inplay = false;
+    ball[i].slope = random(2)*4-2;      // slope is actually half the number of blocks travelled right for every block up or down
+    ball[i].yvelocity = 1;      // yvelocity is always 1 or -1
+    ball[i].inplay = false;      // keeps track of which balls are active
   }
   ball[0].inplay = true;
   paddle.x = 3;
@@ -278,19 +278,19 @@ void reset()
     case 5:
       Level5();
   }
-  DrawPx(random(8), random(5)+3, CustomColor4);
+  DrawPx(random(8), random(5)+3, CustomColor4);      // places the powerup
 }
 
 
 void EraseObjects()
 {
-  for (int v = 0; v < 3; v++)
+  for (int v = 0; v < 3; v++)      // only erase balls that are in play
     if (ball[v].inplay)
       DrawPx(ball[v].x, ball[v].y, Dark);
       
     DrawPx(paddle.x, 0, Dark);
   
-  for(int j = -1; j < 2; j++)
+  for(int j = -1; j < 2; j++)      // paddle.x is the center of the paddle
     DrawPx(paddle.x + j, paddle.y, Dark);
 }
 
@@ -300,15 +300,15 @@ void DrawObjects()
   for (int j = -1; j < 2; j++)
     DrawPx(paddle.x + j, paddle.y, Blue);
   
-  DrawPx(paddle.x, 0, Blue);
+  DrawPx(paddle.x, 0, Blue);      // draws the base when paddle is up
     
-  for (int u = 0; u < 3; u++)
+  for (int u = 0; u < 3; u++)      // only draw balls that are in play
     if (ball[u].inplay)
       DrawPx(ball[u].x, ball[u].y, White);
       
   DisplaySlate();
   
-  LED = 0;
+  LED = 0;      // calculates the LED value based on the level
   for(int e = 0; e < difficulty; e++)
     LED = 2*LED + 1;
   SetAuxLEDs(LED);
@@ -317,8 +317,8 @@ void DrawObjects()
 
 void UpdatePowerups()
 {
-  for(int b = 0; b < 8; b++)
-    for(int c = 0; c < 8; c++)
+  for(int b = 0; b < 8; b++)      // plays a tone when a powerup first becomes
+    for(int c = 0; c < 8; c++)    // active (gets hit)
       if(ReadPx(b, c) == CustomColor3)
       {
         DrawPx(b, c, CustomColor2);
@@ -327,11 +327,11 @@ void UpdatePowerups()
       
   if (timer % 40 == 0)
   {
-    for(int b = 0; b < 8; b++)
+    for(int b = 0; b < 8; b++)      // makes powerups at the bottom of the screen disappear
       if(ReadPx(b, 0) == CustomColor2)
         DrawPx(b, 0, Dark);
     
-    for(int b = 0; b < 8; b++)
+    for(int b = 0; b < 8; b++)      // makes powerups fall at a rate of 25 px/sec
       for(int c = 1; c < 8; c++)
         if(ReadPx(b, c) == CustomColor2 && ReadPx(b, c - 1) == 0)
         {
@@ -339,29 +339,30 @@ void UpdatePowerups()
           DrawPx(b, c - 1, CustomColor2);
         }
       
-    for(int b = 0; b < 8; b++)
+    for(int b = 0; b < 8; b++)      // allows the ball to destroy the powerup
       for(int c = 0; c < 8; c++)
         if(ReadPx(b, c) == CustomColor1)
           DrawPx(b, c, Dark);
   }
+  
   for (int v = -1; v < 2; v++)
     if (ReadPx(paddle.x + v, paddle.y) == CustomColor2)
       switch (random(5))
-      {
-        case 0:
-          MultiBall();
+      {                  // randomly selects a powerup if any part of the paddle
+        case 0:          // touches a falling powerup.
+          MultiBall();      // gifts two extra balls
           break;
         case 1:
-          InstaLaser();
+          InstaLaser();      // fires a laser straight up from the paddle
           break;
         case 2:
-          OneUp();
+          OneUp();      // allows you to drop the ball once
           break;
         case 3:
-          Fireball();
+          Fireball();      // makes the ball temporarily phase through blocks
           break;
         default:
-          Accelerate();
+          Accelerate();      // speeds up the game (powerups aren't always helpful)
       }  
 }
 
@@ -371,21 +372,21 @@ void UpdateBall()
 {
   if (started)
   {
-    for (int n = 0; n < 3; n++)
+    for (int n = 0; n < 3; n++)      // update all three balls, if they are in play
       if (ball[n].inplay)
       {
-        if(timer % (60/ball[n].slope) == 0)
-          BounceX(n);
+        if (timer % (60/ball[n].slope) == 0)
+          BounceX(n);      // change velocity horizontally at a rate based on slope
     
         if (timer % 30 == 0)
-          BounceY(n);
+          BounceY(n);      // change velocity vertically at a rate based on yvelocity
     
         if (timer % (60/ball[n].slope) == 0 && timer % 30 == 0)
-          BounceDiagonal(n);
+          BounceDiagonal(n);      // bounce off of the corners of blocks
   
         if(timer % (60/ball[n].slope) == 0)
         {
-          if (ball[n].slope > 0)
+          if (ball[n].slope > 0)      // move according to slope
             ball[n].x++;
           if (ball[n].slope < 0)
             ball[n].x--;
@@ -393,45 +394,45 @@ void UpdateBall()
 
         if (timer % 30 == 0)
         {
-          ball[n].y += ball[n].yvelocity;
+          ball[n].y += ball[n].yvelocity;      // move according to yvelocity
         }
   
-        StopTeleport(n);
+        StopTeleport(n);      // prevent glitches in which the ball goes off screen
           
-        if (ball[n].x == paddle.x - 2)
-          if (ball[n].y == 0 && paddle.y == 0)
+        if (ball[n].x == paddle.x - 2)          // makes the ball bounce off the
+          if (ball[n].y == 0 && paddle.y == 0)  // left side of the paddle
           {
             ball[n].x--;
             ball[n].slope = -abs(ball[n].slope);
           }
             
-        if (ball[n].x == paddle.x + 2)
-          if (ball[n].y == 0 && paddle.y == 0)
+        if (ball[n].x == paddle.x + 2)          // makes the ball bounce off the
+          if (ball[n].y == 0 && paddle.y == 0)  // right side of the paddle
           {
             ball[n].x++;
             ball[n].slope = abs(ball[n].slope);
           }
             
         if (ball[n].x - paddle.x < 2 && ball[n].x - paddle.x > -2)
-          if (ball[n].y == paddle.y)
-          {
-            ball[n].y++;
-            SlopeChange(n);
+          if (ball[n].y == paddle.y)    // makes the paddle push the ball up
+          {                             // when going up, as well as prevents
+            ball[n].y++;                // glitches in which the ball phases
+            SlopeChange(n);             // through the paddle
           }
       }
     
     if (onfire > 0)
       onfire--;
-    else if (oneup)
+    else if (oneup)      // gives the ball a color based on powerups
       EditColor(White, 15, 12, 4);
     else
       EditColor(White, 13, 4, 3);
   
     if (!ball[0].inplay & !ball[1].inplay & !ball[2].inplay)
-      GameOver();
+      GameOver();      // if no balls are in play, you have lost
   }
   
-  else
+  else      // this is if you still have not launched the ball
   {
     ball[0].x = paddle.x;
     ball[0].y = paddle.y + 1;
@@ -454,14 +455,14 @@ void StopTeleport(int index)
 
 void UpdatePaddle()
 {
-  MovePress();
+  MovePress();      // moves when you press the buttons
   
-  if (timer % 20 == 0)
+  if (timer % 20 == 0)      // moves as the buttons are held
     MoveHold();
   
   CheckButtonsDown();
     
-  if (Button_Up)
+  if (Button_Up)      // raises the paddle up when Up is held
     paddle.y = 1;
   else
     paddle.y = 0;
@@ -475,8 +476,8 @@ void MovePress()
   if (Button_Right && paddle.x < 6)
   {
     paddle.x++;
-    moved = true;
-  }
+    moved = true;      // setting moved here makes it so you must wait at least
+  }                    // 20 msec after pressing a button before the paddle slides
     
   if (Button_Left && paddle.x > 1)
   {
@@ -509,14 +510,14 @@ void BounceY(int index)
   {
     if (ball[index].y > 6)
     {
-      ball[index].yvelocity = -1;
+      ball[index].yvelocity = -1;      // bounces ball off top of screen
       Tone_Start(ToneB4, 50);
     }
     
     if (ReadPx(ball[index].x, ball[index].y+1) > 0 && onfire == 0)
     {
-      ball[index].yvelocity = -1;
-      DrawPx(ball[index].x, ball[index].y+1, ReadPx(ball[index].x, ball[index].y+1) - 1);
+      ball[index].yvelocity = -1;      // bounces ball off top of blocks
+      DrawPx(ball[index].x, ball[index].y+1, ReadPx(ball[index].x, ball[index].y+1) - 1);  // removes health from blocks
       Tone_Start(ToneB3, 50);
     }
   }
@@ -525,16 +526,17 @@ void BounceY(int index)
   {
     if (ReadPx(ball[index].x, ball[index].y-1) > 0 && onfire == 0)
     {
-      ball[index].yvelocity = 1;
+      ball[index].yvelocity = 1;      // bounces ball off bottom of blocks
       DrawPx(ball[index].x, ball[index].y-1, ReadPx(ball[index].x, ball[index].y-1) - 1);
       Tone_Start(ToneB3, 50);
     }
     
-    if (ball[index].y < paddle.y + 2)
+    if (ball[index].y < paddle.y + 2)      // bounces ball off paddle (and changes slope)
       SlopeChange(index);
   }
+  
   if (ball[index].y < 1)
-    ball[index].inplay = false;
+    ball[index].inplay = false;      // removes ball from play if it goes out of bounds
 }
 
 
@@ -544,19 +546,19 @@ void BounceX(int index)
   {
     if (ball[index].x > 6)
     {
-      ball[index].slope = -ball[index].slope;
+      ball[index].slope = -ball[index].slope;  // bounces ball off right of screen
       Tone_Start(ToneB4, 50);
     }
     
     if (ball[index].x == paddle.x - 2 && ball[index].y == paddle.y)
     {
-      ball[index].slope = -ball[index].slope;
+      ball[index].slope = -ball[index].slope;    // bounces ball off right of paddle
       Tone_Start(ToneB4, 50);
     }
     
     if (ReadPx(ball[index].x+1, ball[index].y) > 0 && onfire == 0)
     {
-      ball[index].slope = -ball[index].slope;
+      ball[index].slope = -ball[index].slope;  // bounces ball off right of blocks
       DrawPx(ball[index].x+1, ball[index].y, ReadPx(ball[index].x+1, ball[index].y) - 1);
       Tone_Start(ToneB3, 50);
     }  
@@ -565,21 +567,21 @@ void BounceX(int index)
   if (ball[index].slope < 0)
   {
     if (ball[index].x < 1)
-      ball[index].slope = abs(ball[index].slope);
+      ball[index].slope = abs(ball[index].slope);  // bounces ball off left of screen
       
     if (ReadPx(ball[index].x-1, ball[index].y) > 0 && onfire == 0)
     {
-      ball[index].slope = abs(ball[index].slope);
+      ball[index].slope = abs(ball[index].slope);  // bounces ball off left of blocks
       DrawPx(ball[index].x-1, ball[index].y, ReadPx(ball[index].x-1, ball[index].y) - 1);
       Tone_Start(ToneB3, 50);
     }
     
-    if (ball[index].x < 1)
-      Tone_Start(ToneB4, 50);
+    if (ball[index].x < 1)      // plays the tone for bouncing off the left wall
+      Tone_Start(ToneB4, 50);   // (it was buggy, so I moved it here)
       
     if (ball[index].x == paddle.x + 2 && ball[index].y == paddle.y)
     {
-      ball[index].slope = abs(ball[index].slope);
+      ball[index].slope = abs(ball[index].slope);  // bounces ball off left of paddle
       Tone_Start(ToneB4, 50);
     }
   }
@@ -595,7 +597,7 @@ void BounceDiagonal(int index)
       ball[index].yvelocity = -1;
       DrawPx(ball[index].x+1, ball[index].y+1, ReadPx(ball[index].x+1, ball[index].y+1)-1);
       Tone_Start(ToneB3, 50);
-    }
+    }      // each of these makes the ball bounce from a different corner of blocks
   
   if (ball[index].slope > 0 && ball[index].yvelocity < 0)
     if (ReadPx(ball[index].x+1, ball[index].y-1) > 0 && onfire == 0)
@@ -630,7 +632,7 @@ void SlopeChange(int ballindex)
 {
   switch (paddle.x - ball[ballindex].x)
   {
-    case -2:
+    case -2:      // changes slope based on what part of the paddle the ball hits
       if (ball[ballindex].slope < 0)
       {
         ball[ballindex].yvelocity = 1;
@@ -666,8 +668,8 @@ void SlopeChange(int ballindex)
 void MultiBall()
 {
   for (int g = 0; g < 3; g++)
-    if (ball[g].inplay)
-    {
+    if (ball[g].inplay)      // puts all balls into play and gives them differing
+    {                        // velocities to make them spread out
       ball[(g+1)%3].x = ball[g].x;
       ball[(g+1)%3].y = ball[g].y;
       ball[(g+1)%3].slope = -ball[g].slope;
@@ -693,7 +695,7 @@ void InstaLaser()
   DrawObjects();
   
   Tone_Start(ToneD7, 200);
-  for (int h = 1; h < 8; h++)
+  for (int h = 1; h < 8; h++)      // draws a column of FullOn from the paddle
   {
     DrawPx(paddle.x, h, FullOn);
     DisplaySlate();
@@ -701,7 +703,7 @@ void InstaLaser()
   }
   
   Tone_Start(ToneD6, 200);
-  for (int h = 1; h < 8; h++)
+  for (int h = 1; h < 8; h++)      // erases the column
   {
     DrawPx(paddle.x, h, Dark);
     DisplaySlate();
@@ -714,8 +716,8 @@ void InstaLaser()
 
 void OneUp()
 {
-  EditColor(White, 15, 12, 4);
-  oneup = true;
+  EditColor(White, 15, 12, 4);      // turns the ball green
+  oneup = true;      // setting oneup prevents death
   Tone_Start(ToneC6,150);
   delay(100);
   Tone_Start(ToneE6,150);
@@ -730,8 +732,8 @@ void OneUp()
 
 void Fireball()
 {
-  EditColor(White, 25, 1, 0);
-  onfire = 2000;
+  EditColor(White, 25, 1, 0);      // turns the ball orange
+  onfire = 1500;      // while onfire>0 the ball will not collide with blocks
   Tone_Start(ToneF5,200);
   delay(100);
   Tone_Start(ToneE5,200);
@@ -744,7 +746,7 @@ void Fireball()
 
 void Accelerate()
 {
-  waittime = 4;
+  waittime = 4;      // shortens the delay to make the game more challenging
   Tone_Start(ToneC5,300);
   delay(100);
   Tone_Start(ToneCs5,300);
@@ -753,8 +755,8 @@ void Accelerate()
 }
 
 
-boolean YouHaveWon()
-{
+boolean YouHaveWon()      // checks to see if there are any red, orange, or
+{                         // yellow blocks left.  If not, it is true.
   for (int p = 0; p < 8; p++)
     for (int o = 0; o < 8; o++)
       switch (ReadPx(o, p))
@@ -774,7 +776,7 @@ boolean YouHaveWon()
 
 void RunVictory()
 {
-  for(int i=0;i<8;i++)
+  for(int i=0;i<8;i++)      // flashes green, fanfares, resets on the next level
     for(int j=0;j<8;j++)
       DrawPx(i,j,Green);
   DisplaySlate();
@@ -792,18 +794,18 @@ void RunVictory()
 
 void GameOver()
 {
-  if (oneup)
-  {
+  if (oneup)      // dying with a oneup respawns the ball in the middle of the
+  {               // screen
     oneup = false;
     EditColor(White, 13, 4, 3);
     ball[0].inplay = true;
     ball[0].yvelocity = 1;
-    ball[0].x = 3;
+    ball[0].x = 2 + random(4);
     ball[0].y = 2;
   }
   else
   {
-    failures++;
+    failures++;      // flashes red, buzzes, starts the level over
     DisplaySlate();
     delay(200);
     for(int i=0;i<8;i++)
@@ -821,7 +823,7 @@ void GameOver()
 }
 
 
-void Level1()
+void Level1()      // These draw each level.  There are four total.
 {
   for (int i = 2; i < 6; i++)
     for (int k = 5; k < 8; k++)
@@ -874,7 +876,7 @@ void Level4()
 
 void Level5()
 {
-  for(int i=0;i<8;i++)
+  for(int i=0;i<8;i++)      // plays extended fanfare and shows fail count
     for(int j=0;j<8;j++)
       DrawPx(i,j,Green);
   DisplaySlate();
@@ -900,9 +902,9 @@ void Level5()
   Tone_Start(ToneC6,300);
   delay(600);
   ClearSlate();
-  ShowNumeral(0, (failures - failures%10) /10);
-  ShowNumeral(4, failures%10);
-  while (true)
+  ShowNumeral(0, (failures - failures%10) /10);    // shows tens place
+  ShowNumeral(4, failures%10);    // shows ones place
+  while (true)      // stops the game
   {
   }
 }
@@ -910,13 +912,13 @@ void Level5()
 
 void ShowNumeral(int column, int digit)
 {
-  int color;
-  if (failures < 20)
-    color = 4 - failures/5;
+  int color;          // the color changes from green to orange to yellow to red
+  if (failures < 15)  // as the fail count increases
+    color = 4 - failures/3;
   else
     color = 1;
     
-  switch(digit)
+  switch(digit)      // draws the number in the appropriate place and color
   {
     case 0:
       for(int q = 0; q < 4; q += 3)
@@ -1023,18 +1025,9 @@ void ShowNumeral(int column, int digit)
 
 
 
-void Multiplayer()
+void Multiplayer()        // This is Pong.
 {
-  EditColor(White, 13, 4, 3);
-  EditColor(CustomColor0, 15, 0, 0);
-  EditColor(CustomColor1, 13, 0, 15);
-  EditColor(CustomColor2, 13, 0, 15);
-  EditColor(CustomColor3, 13, 0, 15);
-  EditColor(CustomColor4, 10, 0, 10);
-  failures = 0;
-  level = 1;
-  difficulty = 1;
-  blueScore = 0;
+  blueScore = 0;      // setup
   redScore = 0;
   turn = 1;
   MPReset();
@@ -1042,19 +1035,19 @@ void Multiplayer()
   delay(1000);
   CheckButtonsPress();
   
-  while (true)
+  while (true)      // main loop
   {
-    MPEraseObjects();
+    MPEraseObjects();      // erase both paddles and ball
   
-    MPUpdateBall();
+    MPUpdateBall();      // move the ball along trajectory
     
-    MPUpdatePaddle();
+    MPUpdatePaddle();      // move the paddles based on buttons
   
-    MPDrawObjects();
+    MPDrawObjects();      // redraw paddles and ball
     
     delay(waittime);
     
-    if (Button_Up || Button_Down)
+    if (Button_Up || Button_Down)      // either up or down will start the game
       started = true;
       
     timer++;
@@ -1074,27 +1067,24 @@ void MPReset()
     ball[i].inplay = false;
   }
   ball[0].inplay = true;
-  paddleBlue.x = 3;
-  paddleRed.x = 4;
+  paddleBlue.x = 3;      // the paddles do not move up or down in multiplayer,
+  paddleRed.x = 4;       // so the y values are not needed
   blueMoved = false;
   redMoved = false;
   started = false;
-  oneup = false;
-  onfire = 0;
-  waittime = 5;
-  EditColor(White, 13, 4, 3);
-  timer = 0;
+  waittime = 5;      // MP is slightly faster than SP because the ball has to
+  timer = 0;         // travel farther.
   
-  if (blueScore >= 4)
+  if (blueScore >= 4)      // first to 4 points wins
     BlueWin();
   if (redScore >= 4)
     RedWin();
 }
 
 
-void MPEraseObjects()
-{
-  for (int v = 0; v < 3; v++)
+void MPEraseObjects()          // these methods are nearly identical to the SP
+{                              // counterparts, but there are two paddles, and
+  for (int v = 0; v < 3; v++)  // block collisions are omitted.
     if (ball[v].inplay)
       DrawPx(ball[v].x, ball[v].y, Dark);
   
@@ -1120,7 +1110,7 @@ void MPDrawObjects()
       
   DisplaySlate();
   
-  LED1 = 0;
+  LED1 = 0;      // to have the LEDs come in from both sides, I have two variables
   LED2 = 0;
   for (int e = 0; e < blueScore; e++)
     LED1 = 2*LED1 + 1;
@@ -1164,13 +1154,13 @@ void MPUpdateBall()
             
         if (ball[n].x - paddleRed.x < 2 && ball[n].x - paddleRed.x > -2)
           if (ball[n].y == 7)
-            ball[n].y++;
+            ball[n].y--;
       }
   }
   
   else
   {
-    if (turn)
+    if (turn)      // the ball is served by whoever lost the previous point
     {
       ball[0].x = paddleBlue.x;
       ball[0].y = 1;
@@ -1396,7 +1386,7 @@ void SlopeChangeRed(int ballindex)
 
 void BlueVictory()
 {
-  for(int i=0;i<8;i++)
+  for(int i=0;i<8;i++)      // run a blue fanefare
     for(int j=0;j<8;j++)
       DrawPx(i,j,Blue);
   DisplaySlate();
@@ -1406,15 +1396,15 @@ void BlueVictory()
   delay(150);
   Tone_Start(ToneC6,150);
   delay(150);
-  blueScore++;
-  turn = 0;
+  blueScore++;      // give blue a point
+  turn = 0;      // give red the ball
   MPReset();
 }
 
 
 void RedVictory()
 {
-  for(int i=0;i<8;i++)
+  for(int i=0;i<8;i++)      // same thing but red
     for(int j=0;j<8;j++)
       DrawPx(i,j,Red);
   DisplaySlate();
@@ -1432,8 +1422,8 @@ void RedVictory()
 
 void RedWin()
 {
-  for(int i=0;i<8;i++)
-    for(int j=0;j<8;j++)
+  for(int i=0;i<8;i++)    // run an extended fanfare, update the LEDs, and put
+    for(int j=0;j<8;j++)  // a big red 'R' on the screen
       DrawPx(i,j,Red);
   DisplaySlate();
   LED1 = 0;
@@ -1477,7 +1467,7 @@ void RedWin()
       DrawPx(q, w, Red);
   DisplaySlate();
   
-  while (true)
+  while (true)      // stop the game
   {
   }
 }
@@ -1485,7 +1475,7 @@ void RedWin()
 
 void BlueWin()
 {
-  for(int i=0;i<8;i++)
+  for(int i=0;i<8;i++)      // same thing, but blue
     for(int j=0;j<8;j++)
       DrawPx(i,j,Blue);
   DisplaySlate();

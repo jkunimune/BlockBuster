@@ -62,10 +62,10 @@ void setup()
   Serial.begin(9600);
   EditColor(White, 13, 4, 3);
   EditColor(CustomColor0, 15, 0, 0);
-  EditColor(CustomColor1, 14, 0, 15);
-  EditColor(CustomColor2, 14, 0, 15);
-  EditColor(CustomColor3, 14, 0, 15);
-  EditColor(CustomColor4, 10, 0, 10);
+  EditColor(CustomColor1, 15, 0, 15);
+  EditColor(CustomColor2, 15, 0, 15);
+  EditColor(CustomColor3, 15, 0, 15);
+  EditColor(CustomColor4, 8, 0, 8);
   failures = 0;
   level = 1;
   difficulty = 1;
@@ -772,8 +772,8 @@ void Level5()
 void ShowNumeral(int column, int digit)
 {
   int color;
-  if (failures < 20)
-    color = 4 - failures/5;
+  if (failures < 15)
+    color = 4 - failures/3;
   else
     color = 1;
     
